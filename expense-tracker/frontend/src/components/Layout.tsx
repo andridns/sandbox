@@ -13,6 +13,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/expenses', label: 'Expenses', icon: '💰' },
     { path: '/budgets', label: 'Budgets', icon: '📈' },
     { path: '/reports', label: 'Reports', icon: '📊' },
+    { path: '/import', label: 'Import', icon: '📥' },
   ];
 
   return (

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from app.database import engine, Base
-from app.api import expenses, categories, budgets, reports, export, tags, upload, backup, currency
+from app.api import expenses, categories, budgets, reports, export, tags, upload, backup, currency, import_api
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -33,6 +33,7 @@ app.include_router(tags.router, prefix="/api/v1", tags=["tags"])
 app.include_router(upload.router, prefix="/api/v1", tags=["upload"])
 app.include_router(backup.router, prefix="/api/v1", tags=["backup"])
 app.include_router(currency.router, prefix="/api/v1", tags=["currency"])
+app.include_router(import_api.router, prefix="/api/v1", tags=["import"])
 
 # Mount static files for receipts
 uploads_dir = Path(__file__).parent.parent / "uploads"

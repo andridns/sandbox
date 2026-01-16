@@ -164,4 +164,35 @@ export const exportApi = {
   },
 };
 
+// Import
+export interface ImportResult {
+  success: boolean;
+  summary: {
+    total_rows: number;
+    imported: number;
+    failed: number;
+    uncategorized: number;
+  };
+  category_matches: Record<string, number>;
+  errors: string[];
+  failed_rows: Array<{
+    row: number;
+    error: string;
+    data: any;
+  }>;
+}
+
+export const importApi = {
+  excelImport: async (file: File): Promise<ImportResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<ImportResult>('/import/excel', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
 export default api;
