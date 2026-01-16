@@ -1,6 +1,7 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "expense-tracker/backend/Dockerfile"
+watchPatterns = ["expense-tracker/backend/**"]
 
 [deploy]
 startCommand = "bash ./start.sh"

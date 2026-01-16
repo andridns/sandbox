@@ -221,20 +221,36 @@ class ExcelImportService:
         logger.debug(f"Row {row_num}: Starting validation")
         errors = []
         
-        # Check required fields
+        # Parse date - be lenient, try to infer from datetime
         if 'date' not in row_data or not row_data['date']:
-            errors.append("Date is required")
-            logger.warning(f"Row {row_num}: Missing date field")
+            # Use today's date as fallback if no date provided
+            from datetime import date as date_class
+            row_data['date'] = date_class.today()
+            logger.warning(f"Row {row_num}: No date field found, using today's date: {row_data['date']}")
         else:
-            # Parse date
+            # Parse date - try to extract from datetime
             logger.debug(f"Row {row_num}: Parsing date: {row_data['date']}")
             parsed_date = self._parse_date(row_data['date'])
             if not parsed_date:
-                errors.append(f"Invalid date format: {row_data['date']}")
-                logger.warning(f"Row {row_num}: Failed to parse date: {row_data['date']}")
-            else:
-                row_data['date'] = parsed_date
-                logger.debug(f"Row {row_num}: Date parsed successfully: {parsed_date}")
+                # If parsing fails, try to extract date from string or use today
+                from datetime import date as date_class
+                # Try to extract just the date part from datetime string
+                date_str = str(row_data['date']).strip()
+                # Look for date pattern at the start (e.g., "1/1/2026" from "1/1/2026 20:55:47")
+                date_match = re.match(r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})', date_str)
+                if date_match:
+                    date_part = date_match.group(1)
+                    parsed_date = self._parse_date(date_part)
+                
+                if not parsed_date:
+                    # Last resort: use today's date
+                    parsed_date = date_class.today()
+                    logger.warning(f"Row {row_num}: Could not parse date '{row_data['date']}', using today's date: {parsed_date}")
+                else:
+                    logger.info(f"Row {row_num}: Extracted date from datetime string: {parsed_date}")
+            
+            row_data['date'] = parsed_date
+            logger.debug(f"Row {row_num}: Date set to: {parsed_date}")
         
         if 'amount' not in row_data or row_data['amount'] is None:
             errors.append("Amount is required")
@@ -319,7 +335,7 @@ class ExcelImportService:
         return None
     
     def _parse_date(self, value) -> Optional[date]:
-        """Parse date from various formats"""
+        """Parse date from various formats - lenient parsing that extracts date from datetime"""
         logger.debug(f"Parsing date value: {value} (type: {type(value)})")
         
         if isinstance(value, date):
@@ -337,31 +353,35 @@ class ExcelImportService:
         logger.debug(f"Date string to parse: '{value_str}'")
         
         # Try parsing datetime with time component first (e.g., "1/1/2026 20:55:47")
+        # This is the most common format from Excel Timestamp columns
         datetime_formats = [
-            '%m/%d/%Y %H:%M:%S',
-            '%d/%m/%Y %H:%M:%S',
-            '%Y-%m-%d %H:%M:%S',
-            '%m/%d/%Y %H:%M',
-            '%d/%m/%Y %H:%M',
-            '%Y-%m-%d %H:%M',
+            '%m/%d/%Y %H:%M:%S',      # 1/1/2026 20:55:47
+            '%d/%m/%Y %H:%M:%S',      # 1/1/2026 20:55:47 (DD/MM/YYYY)
+            '%Y-%m-%d %H:%M:%S',      # 2026-01-01 20:55:47
+            '%m/%d/%Y %H:%M',         # 1/1/2026 20:55
+            '%d/%m/%Y %H:%M',         # 1/1/2026 20:55 (DD/MM/YYYY)
+            '%Y-%m-%d %H:%M',         # 2026-01-01 20:55
+            '%m-%d-%Y %H:%M:%S',      # 1-1-2026 20:55:47
+            '%d-%m-%Y %H:%M:%S',      # 1-1-2026 20:55:47 (DD/MM/YYYY)
         ]
         
         for fmt in datetime_formats:
             try:
                 parsed = datetime.strptime(value_str, fmt).date()
-                logger.debug(f"Successfully parsed date with format '{fmt}': {parsed}")
+                logger.debug(f"Successfully parsed date with datetime format '{fmt}': {parsed}")
                 return parsed
             except ValueError:
                 continue
         
         # Try common date formats (without time)
         date_formats = [
-            '%Y-%m-%d',
-            '%d/%m/%Y',
-            '%m/%d/%Y',
-            '%d-%m-%Y',
-            '%Y/%m/%d',
-            '%d.%m.%Y',
+            '%Y-%m-%d',      # 2026-01-01
+            '%m/%d/%Y',      # 1/1/2026
+            '%d/%m/%Y',      # 1/1/2026 (DD/MM/YYYY)
+            '%d-%m-%Y',      # 1-1-2026
+            '%Y/%m/%d',      # 2026/01/01
+            '%d.%m.%Y',      # 1.1.2026
+            '%m-%d-%Y',      # 1-1-2026
         ]
         
         for fmt in date_formats:
@@ -384,6 +404,26 @@ class ExcelImportService:
             return parsed
         except (ValueError, OverflowError) as e:
             logger.debug(f"Failed to parse as Excel serial number: {e}")
+        
+        # Try to extract date from string using regex (e.g., extract "1/1/2026" from "1/1/2026 20:55:47")
+        date_patterns = [
+            r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})',  # 1/1/2026 or 1-1-2026
+            r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})',  # 2026/1/1 or 2026-1-1
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, value_str)
+            if match:
+                date_part = match.group(1)
+                logger.debug(f"Extracted date part from string: '{date_part}'")
+                # Try parsing the extracted date part
+                for fmt in date_formats:
+                    try:
+                        parsed = datetime.strptime(date_part, fmt).date()
+                        logger.debug(f"Successfully parsed extracted date part with format '{fmt}': {parsed}")
+                        return parsed
+                    except ValueError:
+                        continue
         
         logger.warning(f"Could not parse date from value: {value_str}")
         return None

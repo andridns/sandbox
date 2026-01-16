@@ -65,9 +65,10 @@ Ensure your code is pushed to GitHub with all the deployment files:
 4. **Configure the service:**
    - Click on the backend service
    - Go to "Settings" tab
-   - Set "Root Directory" to `expense-tracker/backend`
+   - **IMPORTANT**: Do NOT set "Root Directory" - leave it empty/unset
    - **Important**: In the "Build" section, ensure "Builder" is set to "Dockerfile" (not "Railpack" or "Nixpacks")
    - If you see "Railpack" or auto-detection, click on it and change to "Dockerfile"
+   - The Dockerfile path should be `expense-tracker/backend/Dockerfile` (this is set in railway.toml)
    - Go to "Variables" tab
    - Add the following environment variables:
 
@@ -97,9 +98,10 @@ PORT=8000
 3. **Configure the service:**
    - Click on the frontend service
    - Go to "Settings" tab
-   - Set "Root Directory" to `expense-tracker/frontend`
+   - **IMPORTANT**: Do NOT set "Root Directory" - leave it empty/unset
    - **Important**: In the "Build" section, ensure "Builder" is set to "Dockerfile" (not "Railpack" or "Nixpacks")
    - If you see "Railpack" or auto-detection, click on it and change to "Dockerfile"
+   - The Dockerfile path should be `expense-tracker/frontend/Dockerfile` (this is set in railway.toml)
    - Go to "Variables" tab
    - Add the following environment variables:
 
@@ -185,9 +187,15 @@ Railway provides free `.railway.app` domains by default. To use a custom domain:
 
 **Dockerfile not found:**
 - Verify the Dockerfile exists in the correct location
-- Check that "Root Directory" matches the directory containing the Dockerfile
-- For backend: Root Directory should be `expense-tracker/backend`
-- For frontend: Root Directory should be `expense-tracker/frontend`
+- The Dockerfile path is set in `railway.toml` as `expense-tracker/backend/Dockerfile` or `expense-tracker/frontend/Dockerfile`
+- Do NOT set "Root Directory" in Railway settings - leave it empty
+- Railway will build from the repository root and use the dockerfilePath from railway.toml
+
+**"pyproject.toml not found" or "package.json not found" errors:**
+- This happens when Railway builds from the wrong context
+- **Solution**: Ensure "Root Directory" is NOT set (leave it empty)
+- The Dockerfile uses paths like `expense-tracker/backend/` which assumes building from repo root
+- Verify railway.toml has correct `dockerfilePath` pointing to `expense-tracker/backend/Dockerfile` or `expense-tracker/frontend/Dockerfile`
 
 ### Backend Issues
 
