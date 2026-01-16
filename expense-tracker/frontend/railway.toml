@@ -2,6 +2,9 @@
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
+[build.buildArgs]
+VITE_API_URL = "https://backend-production-1e9d.up.railway.app/api/v1"
+
 [deploy]
 startCommand = "nginx -g 'daemon off;'"
 restartPolicyType = "ON_FAILURE"
