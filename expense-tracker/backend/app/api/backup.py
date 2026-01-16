@@ -11,7 +11,9 @@ from app.models.expense import Expense
 from app.models.category import Category
 from app.models.budget import Budget
 from app.models.backup import Backup
+from app.models.user import User
 from app.schemas.backup import BackupResponse
+from app.core.auth import get_current_user
 
 router = APIRouter()
 
@@ -23,6 +25,7 @@ BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 @router.post("/backup/create", response_model=BackupResponse)
 async def create_backup(
     backup_type: str = "manual",
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a manual backup"""
@@ -107,6 +110,7 @@ async def create_backup(
 
 @router.get("/backup/list", response_model=List[BackupResponse])
 async def list_backups(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """List all backups"""

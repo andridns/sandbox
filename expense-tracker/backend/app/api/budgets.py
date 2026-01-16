@@ -7,8 +7,10 @@ from datetime import date
 from app.database import get_db
 from app.models.budget import Budget
 from app.models.expense import Expense
+from app.models.user import User
 from app.schemas.budget import BudgetCreate, BudgetUpdate, BudgetResponse
 from app.services.currency import get_exchange_rates
+from app.core.auth import get_current_user
 
 router = APIRouter()
 
@@ -17,6 +19,7 @@ router = APIRouter()
 async def get_budgets(
     period: Optional[str] = Query(None),
     category_id: Optional[UUID] = Query(None),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get all budgets with optional filters"""
@@ -35,6 +38,7 @@ async def get_budgets(
 @router.get("/budgets/{budget_id}", response_model=BudgetResponse)
 async def get_budget(
     budget_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get a specific budget by ID"""
@@ -49,6 +53,7 @@ async def get_budget_spent(
     budget_id: UUID,
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -112,6 +117,7 @@ async def get_budget_spent(
 @router.post("/budgets", response_model=BudgetResponse, status_code=201)
 async def create_budget(
     budget: BudgetCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new budget"""
@@ -126,6 +132,7 @@ async def create_budget(
 async def update_budget(
     budget_id: UUID,
     budget_update: BudgetUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a budget"""
@@ -145,6 +152,7 @@ async def update_budget(
 @router.delete("/budgets/{budget_id}", status_code=204)
 async def delete_budget(
     budget_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a budget"""

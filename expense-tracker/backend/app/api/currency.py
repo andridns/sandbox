@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.models.user import User
 from app.services.currency import convert_currency
+from app.core.auth import get_current_user
 
 router = APIRouter()
 
@@ -10,6 +12,7 @@ router = APIRouter()
 async def convert_to_idr(
     amount: float = Query(..., description="Amount to convert"),
     from_currency: str = Query(..., description="Source currency code"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Convert an amount from any currency to IDR"""

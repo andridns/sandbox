@@ -25,7 +25,20 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Include cookies for session-based auth
 });
+
+// Add response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear any stored auth state
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Expenses
 export const expensesApi = {
@@ -196,6 +209,35 @@ export const importApi = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+};
+
+// Auth
+export interface User {
+  id: string;
+  username: string;
+  is_active: boolean;
+}
+
+export const authApi = {
+  login: async (username: string, password: string): Promise<User> => {
+    const response = await api.post<User>('/auth/login', { username, password });
+    return response.data;
+  },
+  logout: async (): Promise<void> => {
+    await api.post('/auth/logout');
+  },
+  getCurrentUser: async (): Promise<User> => {
+    const response = await api.get<User>('/auth/me');
+    return response.data;
+  },
+};
+
+// Admin
+export const adminApi = {
+  deleteAllData: async (): Promise<{ message: string; deleted: any }> => {
+    const response = await api.delete('/admin/delete-all');
     return response.data;
   },
 };

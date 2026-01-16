@@ -11,9 +11,12 @@ from app.database import SessionLocal, engine, Base
 from app.models.category import Category
 from app.models.expense import Expense
 from app.models.budget import Budget
+from app.models.user import User
+from app.core.auth import get_password_hash
 from datetime import date, timedelta
 from decimal import Decimal
 import random
+import os
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -183,12 +186,36 @@ def seed_budgets():
     print("✓ Seeded budgets")
 
 
+def seed_user():
+    """Seed default user"""
+    print("Seeding user...")
+    # Get username and password from environment or use defaults
+    username = os.getenv("DEFAULT_USERNAME", "admin")
+    password = os.getenv("DEFAULT_PASSWORD", "admin123")
+    
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        print(f"✓ User '{username}' already exists, skipping")
+        return
+    
+    user = User(
+        username=username,
+        password_hash=get_password_hash(password),
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    print(f"✓ Created user '{username}' with password '{password}'")
+    print(f"  ⚠️  Please change the default password after first login!")
+
+
 def main():
     """Main seeding function"""
     print("Starting database seeding...")
     print("-" * 50)
     
     try:
+        seed_user()
         seed_categories()
         seed_expenses()
         seed_budgets()

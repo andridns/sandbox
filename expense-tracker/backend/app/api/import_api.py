@@ -9,9 +9,11 @@ from pathlib import Path
 from app.database import get_db
 from app.models.expense import Expense
 from app.models.category import Category
+from app.models.user import User
 from app.services.excel_import import ExcelImportService
 from app.services.category_matcher import CategoryMatcher
 from app.schemas.expense import ExpenseCreate
+from app.core.auth import get_current_user
 from decimal import Decimal
 from datetime import date, datetime
 
@@ -29,6 +31,7 @@ ALLOWED_EXTENSIONS = {".xlsx", ".xls"}
 @router.post("/import/excel")
 async def import_excel(
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """

@@ -5,13 +5,18 @@ from uuid import UUID
 
 from app.database import get_db
 from app.models.category import Category
+from app.models.user import User
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
+from app.core.auth import get_current_user
 
 router = APIRouter()
 
 
 @router.get("/categories", response_model=List[CategoryResponse])
-async def get_categories(db: Session = Depends(get_db)):
+async def get_categories(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Get all categories"""
     categories = db.query(Category).order_by(Category.is_default.desc(), Category.name).all()
     return categories
@@ -20,6 +25,7 @@ async def get_categories(db: Session = Depends(get_db)):
 @router.post("/categories", response_model=CategoryResponse, status_code=201)
 async def create_category(
     category: CategoryCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new category"""
@@ -39,6 +45,7 @@ async def create_category(
 async def update_category(
     category_id: UUID,
     category_update: CategoryUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a category"""
@@ -64,6 +71,7 @@ async def update_category(
 @router.delete("/categories/{category_id}", status_code=204)
 async def delete_category(
     category_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a category"""

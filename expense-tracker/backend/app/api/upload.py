@@ -7,6 +7,8 @@ from pathlib import Path
 from PIL import Image
 
 from app.database import get_db
+from app.models.user import User
+from app.core.auth import get_current_user
 
 router = APIRouter()
 
@@ -24,6 +26,7 @@ ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 @router.post("/upload/receipt")
 async def upload_receipt(
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Upload a receipt image"""

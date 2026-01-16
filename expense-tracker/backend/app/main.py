@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import os
 from app.database import engine, Base
-from app.api import expenses, categories, budgets, reports, export, tags, upload, backup, currency, import_api
+from app.api import expenses, categories, budgets, reports, export, tags, upload, backup, currency, import_api, auth, admin
 
 # Configure logging
 logging.basicConfig(
@@ -53,6 +53,10 @@ app.add_middleware(
 )
 
 # Include routers
+# Auth routes (public)
+app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
+
+# Protected routes (require authentication)
 app.include_router(expenses.router, prefix="/api/v1", tags=["expenses"])
 app.include_router(categories.router, prefix="/api/v1", tags=["categories"])
 app.include_router(budgets.router, prefix="/api/v1", tags=["budgets"])
@@ -63,6 +67,7 @@ app.include_router(upload.router, prefix="/api/v1", tags=["upload"])
 app.include_router(backup.router, prefix="/api/v1", tags=["backup"])
 app.include_router(currency.router, prefix="/api/v1", tags=["currency"])
 app.include_router(import_api.router, prefix="/api/v1", tags=["import"])
+app.include_router(admin.router, prefix="/api/v1", tags=["admin"])
 
 # Include seed router if available
 if SEED_AVAILABLE:
