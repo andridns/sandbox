@@ -13,7 +13,7 @@ from app.services.excel_import import ExcelImportService
 from app.services.category_matcher import CategoryMatcher
 from app.schemas.expense import ExpenseCreate
 from decimal import Decimal
-from datetime import date
+from datetime import date, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -171,20 +171,31 @@ async def import_excel(
                 uncategorized_count += 1
                 logger.debug(f"Row {idx + 1}: No category matched, leaving uncategorized")
             
+            # Ensure date is a date object (not datetime) before database import
+            # Extract exact date from source datetime if needed
+            expense_date = expense_data['date']
+            if isinstance(expense_date, datetime):
+                expense_date = expense_date.date()
+                logger.debug(f"Row {idx + 1}: Converted datetime to date: {expense_date}")
+            elif not isinstance(expense_date, date):
+                # Fallback to today if somehow not a date/datetime
+                expense_date = date.today()
+                logger.warning(f"Row {idx + 1}: Invalid date type, using today: {expense_date}")
+            
             # Convert to ExpenseCreate format
             expense_create = ExpenseCreate(
                 amount=expense_data['amount'],
                 currency=expense_data.get('currency', 'IDR'),
                 description=expense_data['description'],
                 category_id=expense_data.get('category_id'),
-                date=expense_data['date'],
+                date=expense_date,
                 tags=expense_data.get('tags', []),
                 payment_method=expense_data.get('payment_method', 'Cash'),
                 location=expense_data.get('location'),
                 notes=expense_data.get('notes'),
                 is_recurring=False
             )
-            logger.debug(f"Row {idx + 1}: Created ExpenseCreate object")
+            logger.debug(f"Row {idx + 1}: Created ExpenseCreate object with date: {expense_date}")
             
             # Create expense
             logger.debug(f"Row {idx + 1}: Saving to database")

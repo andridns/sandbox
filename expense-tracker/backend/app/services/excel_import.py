@@ -163,14 +163,27 @@ class ExcelImportService:
                 cell = row[col_idx - 1]
                 value = cell.value
                 
-                # For date fields, try to get the actual datetime value from openpyxl
+                # For date fields, convert datetime to date immediately from source
                 if field == 'date' and isinstance(cell, Cell):
-                    # Check if cell has a datetime value
-                    if cell.data_type == 'd' or isinstance(value, (datetime, date)):
-                        # openpyxl already parsed it as datetime/date
+                    # Check if cell has a datetime value - extract exact date from source
+                    if isinstance(value, datetime):
+                        # Convert datetime to date immediately, preserving exact date from source
+                        value = value.date()
+                        logger.debug(f"Row {row_num}: Extracted exact date from datetime: {value}")
+                    elif isinstance(value, date):
+                        # Already a date object, use as-is
                         value = value
+                        logger.debug(f"Row {row_num}: Date value from source: {value}")
+                    elif cell.data_type == 'd':
+                        # Cell is marked as date type in Excel
+                        if isinstance(value, datetime):
+                            value = value.date()
+                            logger.debug(f"Row {row_num}: Extracted date from Excel date cell: {value}")
+                        elif isinstance(value, date):
+                            value = value
+                            logger.debug(f"Row {row_num}: Date from Excel date cell: {value}")
                     elif isinstance(value, (int, float)) and value > 0:
-                        # Might be Excel serial date number
+                        # Might be Excel serial date number - convert to date
                         try:
                             from datetime import timedelta
                             excel_epoch = datetime(1899, 12, 30)
@@ -240,25 +253,42 @@ class ExcelImportService:
         errors = []
         
         # Parse date - be lenient, always provide a valid date
+        # Ensure datetime objects are converted to date objects before database import
         from datetime import date as date_class
         if 'date' not in row_data or not row_data['date']:
             # Use today's date as fallback if no date provided
             row_data['date'] = date_class.today()
             logger.warning(f"Row {row_num}: No date field found, using today's date: {row_data['date']}")
         else:
-            # Parse date - try multiple strategies
+            # Ensure we have the exact date from source - convert datetime to date if needed
             original_date_value = row_data['date']
-            logger.debug(f"Row {row_num}: Parsing date: {original_date_value}")
-            parsed_date = self._parse_date(original_date_value)
             
-            # If parsing fails, use today's date as fallback (don't fail the row)
-            if not parsed_date:
-                fallback_date = date_class.today()
-                row_data['date'] = fallback_date
-                logger.warning(f"Row {row_num}: Could not parse date '{original_date_value}', using today's date: {fallback_date}")
+            # If it's already a datetime object, extract the exact date immediately
+            if isinstance(original_date_value, datetime):
+                row_data['date'] = original_date_value.date()
+                logger.info(f"Row {row_num}: Extracted exact date from datetime source: {original_date_value} -> {row_data['date']}")
+            elif isinstance(original_date_value, date):
+                # Already a date object, ensure it's set correctly
+                row_data['date'] = original_date_value
+                logger.debug(f"Row {row_num}: Date from source: {original_date_value}")
             else:
-                row_data['date'] = parsed_date
-                logger.debug(f"Row {row_num}: Date parsed successfully: {parsed_date}")
+                # Parse date from string or other formats - try multiple strategies
+                logger.debug(f"Row {row_num}: Parsing date from: {original_date_value} (type: {type(original_date_value)})")
+                parsed_date = self._parse_date(original_date_value)
+                
+                # If parsing fails, use today's date as fallback (don't fail the row)
+                if not parsed_date:
+                    fallback_date = date_class.today()
+                    row_data['date'] = fallback_date
+                    logger.warning(f"Row {row_num}: Could not parse date '{original_date_value}', using today's date: {fallback_date}")
+                else:
+                    row_data['date'] = parsed_date
+                    logger.info(f"Row {row_num}: Date parsed successfully from source: {original_date_value} -> {parsed_date}")
+            
+            # Final safety check: ensure we have a date object, not datetime
+            if isinstance(row_data['date'], datetime):
+                row_data['date'] = row_data['date'].date()
+                logger.debug(f"Row {row_num}: Converted datetime to date: {row_data['date']}")
         
         if 'amount' not in row_data or row_data['amount'] is None:
             errors.append("Amount is required")

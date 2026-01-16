@@ -12,7 +12,7 @@ from app.services.excel_import import ExcelImportService
 from app.services.category_matcher import CategoryMatcher
 from app.schemas.expense import ExpenseCreate
 from decimal import Decimal
-from datetime import date
+from datetime import date, datetime
 
 router = APIRouter()
 
@@ -82,13 +82,21 @@ async def import_excel(
                 expense_data['category_id'] = None
                 uncategorized_count += 1
             
+            # Ensure date is a date object (not datetime) before database import
+            expense_date = expense_data['date']
+            if isinstance(expense_date, datetime):
+                expense_date = expense_date.date()
+            elif not isinstance(expense_date, date):
+                # Fallback to today if somehow not a date/datetime
+                expense_date = date.today()
+            
             # Convert to ExpenseCreate format
             expense_create = ExpenseCreate(
                 amount=expense_data['amount'],
                 currency=expense_data.get('currency', 'IDR'),
                 description=expense_data['description'],
                 category_id=expense_data.get('category_id'),
-                date=expense_data['date'],
+                date=expense_date,
                 tags=expense_data.get('tags', []),
                 payment_method=expense_data.get('payment_method', 'Cash'),
                 location=expense_data.get('location'),
