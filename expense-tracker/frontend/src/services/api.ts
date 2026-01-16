@@ -13,12 +13,10 @@ import type {
   CategoryBreakdown,
 } from '../types';
 
-// Use environment variable for API URL, fallback to relative path for production
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL is not set");
-}
+// Use environment variable for API URL, fallback to relative path for local development
+// In local dev, Vite proxy handles /api -> http://localhost:8000
+// In production, VITE_API_URL should be set to the backend URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
