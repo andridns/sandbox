@@ -31,16 +31,9 @@ const Expenses = () => {
 
   const handleDelete = (id: string) => {
     deleteMutation.mutate(id);
-    // Show undo toast (simplified - in real app would need to track deleted items)
+    // Show success toast
     toast.success('Expense deleted', {
       duration: 5000,
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          // Would restore the expense here
-          toast.success('Expense restored');
-        },
-      },
     });
   };
 

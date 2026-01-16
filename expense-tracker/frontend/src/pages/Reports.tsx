@@ -34,23 +34,19 @@ const Reports = () => {
     try {
       let blob: Blob;
       let filename: string;
-      let mimeType: string;
 
       switch (format) {
         case 'csv':
           blob = await exportApi.exportCSV(startDate, endDate);
           filename = 'expenses.csv';
-          mimeType = 'text/csv';
           break;
         case 'excel':
           blob = await exportApi.exportExcel(startDate, endDate);
           filename = 'expenses.xlsx';
-          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
           break;
         case 'pdf':
           blob = await exportApi.exportPDF(startDate, endDate);
           filename = 'expenses.pdf';
-          mimeType = 'application/pdf';
           break;
       }
 

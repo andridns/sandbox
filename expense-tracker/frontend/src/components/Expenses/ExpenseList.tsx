@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatCurrency, formatDate } from '../../utils/format';
+import { formatDate } from '../../utils/format';
 import CurrencyDisplay from '../CurrencyDisplay';
 import type { Expense } from '../../types';
 

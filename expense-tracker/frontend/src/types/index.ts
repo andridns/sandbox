@@ -100,6 +100,7 @@ export interface SummaryReport {
   total_expenses: number;
   total_amount: number;
   average_amount: number;
+  currency?: string;
 }
 
 export interface TrendData {

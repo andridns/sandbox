@@ -1,4 +1,3 @@
-import { formatCurrency } from '../../utils/format';
 import CurrencyDisplay from '../CurrencyDisplay';
 import type { Budget } from '../../types';
 

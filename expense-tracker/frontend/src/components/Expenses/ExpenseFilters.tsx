@@ -182,7 +182,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
               type="text"
               value={tagQuery}
               onChange={(e) => setTagQuery(e.target.value)}
-              onBlur={(e) => {
+              onBlur={() => {
                 // Delay to allow click on suggestions
                 setTimeout(() => {
                   if (tagQuery) {

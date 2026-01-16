@@ -12,7 +12,7 @@ const ExcelImport = () => {
   const importMutation = useMutation({
     mutationFn: (file: File) => importApi.excelImport(file),
     onSuccess: (result) => {
-      const { summary, category_matches, errors } = result;
+      const { summary, errors } = result;
       
       // Show success message
       toast.success(

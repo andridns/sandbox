@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { expensesApi, categoriesApi, uploadApi, tagsApi } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import type { ExpenseCreate, ExpenseUpdate } from '../../types';
