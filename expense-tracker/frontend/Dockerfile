@@ -24,15 +24,12 @@ FROM nginx:alpine
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration template
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
-
-# Copy custom entrypoint
-COPY docker-entrypoint.sh /docker-entrypoint-custom.sh
-RUN chmod +x /docker-entrypoint-custom.sh
+# Copy startup script that generates nginx config at runtime
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Expose port
 EXPOSE 80
 
-# Use custom entrypoint that processes template and starts nginx
-ENTRYPOINT ["/docker-entrypoint-custom.sh"]
+# Use startup script as CMD - it will generate config and start nginx
+CMD ["/start.sh"]
