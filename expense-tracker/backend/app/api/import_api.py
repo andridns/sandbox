@@ -92,10 +92,14 @@ async def import_excel(
         'subscription': 'Subscriptions',
     }
     
+    skipped_count = 0
+    
     for idx, expense_data in enumerate(expenses_data, start=1):
         try:
-            # Skip if amount is 0 (like income entries)
-            if expense_data.get('amount', 0) == 0:
+            # Skip if amount is 0 or negative (like income entries, taxes, etc.)
+            amount = expense_data.get('amount', 0)
+            if amount <= 0:
+                skipped_count += 1
                 continue
             
             matched_category = None
@@ -167,6 +171,7 @@ async def import_excel(
             "imported": imported_count,
             "failed": len(failed_rows) + len(parse_errors),
             "uncategorized": uncategorized_count,
+            "skipped": skipped_count,
         },
         "category_matches": category_matches,
         "errors": parse_errors + [f"Row {row['row']}: {row['error']}" for row in failed_rows],

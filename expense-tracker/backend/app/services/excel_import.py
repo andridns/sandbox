@@ -18,11 +18,14 @@ class ExcelImportService:
     COLUMN_MAPPINGS = {
         'date': ['date', 'tanggal', 'transaction date', 'expense date', 'timestamp'],
         'amount': ['amount', 'jumlah', 'total', 'price', 'harga', 'value'],
-        'description': ['description', 'deskripsi', 'note', 'notes', 'detail', 'item', 'merchant', 'store', 'name', 'rawtext', 'raw text'],
+        'description': ['description', 'deskripsi', 'note', 'notes', 'detail', 'item', 'merchant', 'store'],
+        'name': ['name'],  # Separate mapping for Name column
+        'rawtext': ['rawtext', 'raw text'],  # Separate mapping for RawText column
         'category': ['category', 'kategori', 'type', 'jenis'],
         'payment_method': ['payment method', 'payment', 'method', 'cara bayar', 'metode pembayaran'],
         'location': ['location', 'lokasi', 'place', 'tempat'],
-        'notes': ['notes', 'note', 'catatan', 'remarks', 'keterangan', 'who', 'rawtext', 'raw text'],
+        'notes': ['notes', 'note', 'catatan', 'remarks', 'keterangan'],
+        'who': ['who'],  # Separate mapping for Who column
         'currency': ['currency', 'mata uang', 'matauang'],
         'tags': ['tags', 'tag', 'label'],
     }
@@ -104,7 +107,13 @@ class ExcelImportService:
                         break
             
             # If we found required columns, stop searching
-            if 'date' in self.column_map and 'amount' in self.column_map and 'description' in self.column_map:
+            # Check for description OR (name OR rawtext) as description source
+            has_description = (
+                'description' in self.column_map or 
+                'name' in self.column_map or 
+                'rawtext' in self.column_map
+            )
+            if 'date' in self.column_map and 'amount' in self.column_map and has_description:
                 break
     
     def _extract_row(self, row_num: int) -> Optional[Dict]:
@@ -122,19 +131,27 @@ class ExcelImportService:
                     row_data[field] = value
         
         # Handle description field - prefer 'name' over 'rawtext' if both exist
-        if 'name' in row_data and 'rawtext' in row_data:
-            # Use Name as primary description, RawText as notes if available
-            if not row_data.get('description'):
-                row_data['description'] = row_data.get('name') or row_data.get('rawtext')
-            if not row_data.get('notes'):
-                rawtext = row_data.get('rawtext', '').strip()
-                name = row_data.get('name', '').strip()
-                if rawtext and rawtext != name:
-                    row_data['notes'] = rawtext
-        elif 'name' in row_data and not row_data.get('description'):
-            row_data['description'] = row_data['name']
-        elif 'rawtext' in row_data and not row_data.get('description'):
-            row_data['description'] = row_data['rawtext']
+        # Combine name and rawtext into description
+        description_parts = []
+        if 'name' in row_data and row_data['name']:
+            description_parts.append(str(row_data['name']).strip())
+        if 'rawtext' in row_data and row_data['rawtext']:
+            rawtext_value = str(row_data['rawtext']).strip()
+            # If rawtext contains amount, it's likely the full description
+            # Otherwise, append it
+            if rawtext_value and rawtext_value not in description_parts:
+                if not description_parts:
+                    description_parts.append(rawtext_value)
+                else:
+                    # Store rawtext in notes if name exists
+                    row_data['notes'] = rawtext_value
+        
+        # Set description from available sources
+        if description_parts:
+            row_data['description'] = description_parts[0]
+        elif 'description' not in row_data or not row_data['description']:
+            # Fallback to any available description field
+            row_data['description'] = row_data.get('name') or row_data.get('rawtext') or ''
         
         # Handle 'who' field - add to notes if available
         if 'who' in row_data and row_data['who']:

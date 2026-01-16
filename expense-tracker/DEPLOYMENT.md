@@ -25,12 +25,14 @@ This guide will walk you through deploying the Expense Tracker application to Ra
 ### 1. Prepare Your Repository
 
 Ensure your code is pushed to GitHub with all the deployment files:
-- `backend/Dockerfile`
-- `backend/start.sh`
-- `backend/railway.toml`
-- `frontend/Dockerfile`
-- `frontend/nginx.conf`
-- `frontend/railway.toml`
+- `expense-tracker/backend/Dockerfile`
+- `expense-tracker/backend/start.sh`
+- `expense-tracker/backend/railway.toml`
+- `expense-tracker/frontend/Dockerfile`
+- `expense-tracker/frontend/nginx.conf`
+- `expense-tracker/frontend/railway.toml`
+
+**Note**: The source code is located in the `expense-tracker/` directory, so we'll need to set the root directory accordingly in Railway.
 
 ### 2. Create Railway Account
 
@@ -43,8 +45,10 @@ Ensure your code is pushed to GitHub with all the deployment files:
 1. In Railway dashboard, click "New Project"
 2. Select "Deploy from GitHub repo"
 3. Authorize Railway to access your GitHub repositories if prompted
-4. Select your expense-tracker repository
+4. Select your repository (the one that contains the `expense-tracker` directory)
 5. Railway will create a new project
+
+**Note**: If your repository is named something like `sandbox` or `my-projects` and contains the `expense-tracker` folder, select that repository. Railway will allow you to set the root directory per service.
 
 ### 4. Add PostgreSQL Database
 
@@ -56,12 +60,12 @@ Ensure your code is pushed to GitHub with all the deployment files:
 ### 5. Deploy Backend Service
 
 1. In your Railway project, click "New"
-2. Select "GitHub Repo" → Select your expense-tracker repository
+2. Select "GitHub Repo" → Select your repository (the one containing the `expense-tracker` directory)
 3. Railway will detect the Dockerfile automatically
 4. **Configure the service:**
    - Click on the backend service
    - Go to "Settings" tab
-   - Set "Root Directory" to `backend`
+   - Set "Root Directory" to `expense-tracker/backend`
    - Go to "Variables" tab
    - Add the following environment variables:
 
@@ -87,11 +91,11 @@ PORT=8000
 ### 6. Deploy Frontend Service
 
 1. In your Railway project, click "New"
-2. Select "GitHub Repo" → Select your expense-tracker repository
+2. Select "GitHub Repo" → Select your repository (the same repository as backend)
 3. **Configure the service:**
    - Click on the frontend service
    - Go to "Settings" tab
-   - Set "Root Directory" to `frontend`
+   - Set "Root Directory" to `expense-tracker/frontend`
    - Go to "Variables" tab
    - Add the following environment variables:
 
@@ -144,18 +148,18 @@ Railway provides free `.railway.app` domains by default. To use a custom domain:
 
 ### Backend Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:port/db` |
-| `ALLOWED_ORIGINS` | Comma-separated CORS origins | `https://frontend.railway.app` |
-| `PORT` | Server port (default: 8000) | `8000` |
+| Variable          | Description                  | Example                               |
+|-------------------|------------------------------|---------------------------------------|
+| `DATABASE_URL`    | PostgreSQL connection string | `postgresql://user:pass@host:port/db` |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins | `https://frontend.railway.app`        |
+| `PORT`            | Server port (default: 8000)  | `8000`                                |
 
 ### Frontend Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL | `https://backend.railway.app/api/v1` |
-| `BACKEND_URL` | Backend service URL (for nginx proxy) | `https://backend.railway.app` |
+| Variable       | Description                           | Example                              |
+|----------------|---------------------------------------|--------------------------------------|
+| `VITE_API_URL` | Backend API base URL                  | `https://backend.railway.app/api/v1` |
+| `BACKEND_URL`  | Backend service URL (for nginx proxy) | `https://backend.railway.app`        |
 
 ## Troubleshooting
 
