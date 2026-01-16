@@ -1,11 +1,14 @@
 """
 Smart category matching service using keyword-based algorithm
 """
+import logging
 from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from app.models.category import Category
 from app.models.expense import Expense
 import re
+
+logger = logging.getLogger(__name__)
 
 
 class CategoryMatcher:
@@ -15,15 +18,20 @@ class CategoryMatcher:
         self.db = db
         self.categories: List[Category] = []
         self.keyword_map: Dict[str, List[str]] = {}
+        logger.debug("Initializing CategoryMatcher")
         self._load_categories()
         self._build_keyword_map()
+        logger.info(f"CategoryMatcher initialized with {len(self.categories)} categories")
     
     def _load_categories(self):
         """Load all categories from database"""
+        logger.debug("Loading categories from database")
         self.categories = self.db.query(Category).all()
+        logger.debug(f"Loaded {len(self.categories)} categories")
     
     def _build_keyword_map(self):
         """Build keyword dictionary for each category"""
+        logger.debug("Building keyword map for categories")
         # Pre-defined keywords for common categories (English and Indonesian)
         predefined_keywords = {
             "Food & Dining": [
@@ -78,11 +86,13 @@ class CategoryMatcher:
         for category in self.categories:
             category_name = category.name
             keywords = predefined_keywords.get(category_name, [])
+            logger.debug(f"Category '{category_name}': Found {len(keywords)} predefined keywords")
             
             # Also learn from existing categorized expenses
             existing_expenses = self.db.query(Expense).filter(
                 Expense.category_id == category.id
             ).limit(100).all()
+            logger.debug(f"Category '{category_name}': Found {len(existing_expenses)} existing expenses")
             
             # Extract common words from existing expense descriptions
             description_words = []
@@ -95,8 +105,12 @@ class CategoryMatcher:
             word_counts = Counter(description_words)
             common_words = [word for word, count in word_counts.items() if count >= 2 and len(word) > 3]
             keywords.extend(common_words[:10])  # Add top 10 common words
+            logger.debug(f"Category '{category_name}': Added {len(common_words[:10])} learned keywords")
             
             self.keyword_map[category_name] = list(set(keywords))  # Remove duplicates
+            logger.debug(f"Category '{category_name}': Total keywords: {len(self.keyword_map[category_name])}")
+        
+        logger.info(f"Keyword map built for {len(self.keyword_map)} categories")
     
     def _extract_words(self, text: str) -> List[str]:
         """Extract words from text, normalized"""
@@ -121,14 +135,19 @@ class CategoryMatcher:
         Returns:
             Best matching Category or None if no match found
         """
+        logger.debug(f"Matching description: '{description[:100]}'")
+        
         if not description:
+            logger.debug("Empty description, returning None")
             return None
         
         # Normalize description
         normalized_desc = description.lower()
         desc_words = self._extract_words(description)
+        logger.debug(f"Extracted {len(desc_words)} words from description: {desc_words[:10]}")
         
         if not desc_words:
+            logger.debug("No words extracted, returning None")
             return None
         
         best_match = None
@@ -149,22 +168,28 @@ class CategoryMatcher:
                 # Exact word match (higher score)
                 if keyword_lower in desc_words:
                     score += 3
+                    logger.debug(f"Category '{category.name}': Exact keyword match '{keyword}' (+3)")
                 # Partial match (lower score)
                 elif keyword_lower in normalized_desc:
                     score += 1
+                    logger.debug(f"Category '{category.name}': Partial keyword match '{keyword}' (+1)")
             
             # Check if category name appears in description
             category_words = self._extract_words(category.name)
             for cat_word in category_words:
                 if cat_word in desc_words:
                     score += 2
+                    logger.debug(f"Category '{category.name}': Category word match '{cat_word}' (+2)")
             
             if score > best_score:
                 best_score = score
                 best_match = category
+                logger.debug(f"Category '{category.name}': New best match with score {score}")
         
         # Only return match if score is above threshold
         if best_score >= 2:
+            logger.info(f"Matched '{description[:50]}' to category '{best_match.name}' with score {best_score}")
             return best_match
         
+        logger.debug(f"No match found for '{description[:50]}' (best score: {best_score}, threshold: 2)")
         return None

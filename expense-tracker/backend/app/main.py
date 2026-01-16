@@ -1,3 +1,5 @@
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,6 +7,18 @@ from pathlib import Path
 import os
 from app.database import engine, Base
 from app.api import expenses, categories, budgets, reports, export, tags, upload, backup, currency, import_api
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
+logger.info("Starting Expense Tracker API")
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
