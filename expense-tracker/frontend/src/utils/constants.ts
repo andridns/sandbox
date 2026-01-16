@@ -32,85 +32,108 @@ export type DateRangePreset =
   | 'all'
   | 'last7days'
   | 'last30days'
-  | 'previousMonth'
-  | 'previous2Months'
-  | 'thisYear'
-  | 'lastYear'
+  | `month-${number}` // month-0 = last month, month-1 = 2 months ago, etc.
+  | `year-${number}` // year-0 = this year, year-1 = last year, etc.
   | 'custom';
 
 export const getDateRange = (preset: DateRangePreset): { start_date?: string; end_date?: string } => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  switch (preset) {
-    case 'all':
-      return {};
-    
-    case 'last7days': {
-      const start = new Date(today);
-      start.setDate(start.getDate() - 7);
-      return {
-        start_date: start.toISOString().split('T')[0],
-        end_date: today.toISOString().split('T')[0],
-      };
-    }
-    
-    case 'last30days': {
-      const start = new Date(today);
-      start.setDate(start.getDate() - 30);
-      return {
-        start_date: start.toISOString().split('T')[0],
-        end_date: today.toISOString().split('T')[0],
-      };
-    }
-    
-    case 'previousMonth': {
-      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const end = new Date(today.getFullYear(), today.getMonth(), 0);
-      return {
-        start_date: start.toISOString().split('T')[0],
-        end_date: end.toISOString().split('T')[0],
-      };
-    }
-    
-    case 'previous2Months': {
-      const start = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-      const end = new Date(today.getFullYear(), today.getMonth(), 0);
-      return {
-        start_date: start.toISOString().split('T')[0],
-        end_date: end.toISOString().split('T')[0],
-      };
-    }
-    
-    case 'thisYear': {
-      const start = new Date(today.getFullYear(), 0, 1);
-      return {
-        start_date: start.toISOString().split('T')[0],
-        end_date: today.toISOString().split('T')[0],
-      };
-    }
-    
-    case 'lastYear': {
-      const start = new Date(today.getFullYear() - 1, 0, 1);
-      const end = new Date(today.getFullYear() - 1, 11, 31);
-      return {
-        start_date: start.toISOString().split('T')[0],
-        end_date: end.toISOString().split('T')[0],
-      };
-    }
-    
-    case 'custom':
-    default:
-      return {};
+  if (preset === 'all') {
+    return {};
   }
+
+  if (preset === 'last7days') {
+    const start = new Date(today);
+    start.setDate(start.getDate() - 7);
+    return {
+      start_date: start.toISOString().split('T')[0],
+      end_date: today.toISOString().split('T')[0],
+    };
+  }
+
+  if (preset === 'last30days') {
+    const start = new Date(today);
+    start.setDate(start.getDate() - 30);
+    return {
+      start_date: start.toISOString().split('T')[0],
+      end_date: today.toISOString().split('T')[0],
+    };
+  }
+
+  // Handle month presets (month-0 = last month, month-1 = 2 months ago, etc.)
+  if (preset.startsWith('month-')) {
+    const monthsAgo = parseInt(preset.replace('month-', ''));
+    const targetDate = new Date(today.getFullYear(), today.getMonth() - monthsAgo - 1, 1);
+    const start = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const end = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+    return {
+      start_date: start.toISOString().split('T')[0],
+      end_date: end.toISOString().split('T')[0],
+    };
+  }
+
+  // Handle year presets (year-0 = this year, year-1 = last year, etc.)
+  if (preset.startsWith('year-')) {
+    const yearsAgo = parseInt(preset.replace('year-', ''));
+    const targetYear = today.getFullYear() - yearsAgo;
+    
+    if (yearsAgo === 0) {
+      // This year: from January 1st to today
+      const start = new Date(targetYear, 0, 1);
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: today.toISOString().split('T')[0],
+      };
+    } else {
+      // Previous years: entire year
+      const start = new Date(targetYear, 0, 1);
+      const end = new Date(targetYear, 11, 31);
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: end.toISOString().split('T')[0],
+      };
+    }
+  }
+
+  return {};
 };
 
-export const DATE_RANGE_OPTIONS: Array<{ label: string; value: DateRangePreset }> = [
-  { label: 'All Dates', value: 'all' },
-  { label: 'Last 7 Days', value: 'last7days' },
-  { label: 'Last 30 Days', value: 'last30days' },
-  { label: 'Previous Month', value: 'previousMonth' },
-  { label: 'Previous 2 Months', value: 'previous2Months' },
-  { label: 'This Year', value: 'thisYear' },
-  { label: 'Last Year', value: 'lastYear' },
-] as const;
+// Generate month name in Indonesian or English
+const getMonthName = (date: Date, locale: string = 'en-US'): string => {
+  return date.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+};
+
+// Generate dynamic date range options
+export const getDateRangeOptions = (): Array<{ label: string; value: DateRangePreset }> => {
+  const today = new Date();
+  const options: Array<{ label: string; value: DateRangePreset }> = [
+    { label: 'All Dates', value: 'all' },
+    { label: 'Last 7 Days', value: 'last7days' },
+    { label: 'Last 30 Days', value: 'last30days' },
+  ];
+
+  // Add months going backwards (up to 12 months ago)
+  for (let i = 0; i < 12; i++) {
+    const targetDate = new Date(today.getFullYear(), today.getMonth() - i - 1, 1);
+    const monthName = getMonthName(targetDate);
+    options.push({
+      label: monthName,
+      value: `month-${i}` as DateRangePreset,
+    });
+  }
+
+  // Add years going backwards (this year, last year, etc. - up to 10 years ago)
+  const currentYear = today.getFullYear();
+  for (let i = 0; i <= 10; i++) {
+    const year = currentYear - i;
+    if (i === 0) {
+      options.push({ label: `This Year (${year})`, value: `year-${i}` as DateRangePreset });
+    } else {
+      options.push({ label: `${year}`, value: `year-${i}` as DateRangePreset });
+    }
+  }
+
+  return options;
+};

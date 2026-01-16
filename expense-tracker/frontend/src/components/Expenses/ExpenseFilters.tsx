@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi, tagsApi } from '../../services/api';
 import type { ExpenseFilters } from '../../types';
-import { PAYMENT_METHODS, MIN_AMOUNT_OPTIONS, DATE_RANGE_OPTIONS, getDateRange, type DateRangePreset } from '../../utils/constants';
+import { PAYMENT_METHODS, MIN_AMOUNT_OPTIONS, getDateRangeOptions, getDateRange, type DateRangePreset } from '../../utils/constants';
 
 interface ExpenseFiltersProps {
   filters: ExpenseFilters;
@@ -13,12 +13,15 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
   const [localFilters, setLocalFilters] = useState<ExpenseFilters>(filters);
   const [tagQuery, setTagQuery] = useState('');
   
+  // Get date range options (generated dynamically)
+  const dateRangeOptions = useMemo(() => getDateRangeOptions(), []);
+
   // Initialize date range preset based on filters
   const getInitialDatePreset = (): DateRangePreset => {
     const { start_date, end_date } = filters;
     if (!start_date && !end_date) return 'all';
     
-    const matchedPreset = DATE_RANGE_OPTIONS.find((option) => {
+    const matchedPreset = dateRangeOptions.find((option) => {
       if (option.value === 'all') return false;
       const range = getDateRange(option.value);
       return range.start_date === start_date && range.end_date === end_date;
@@ -55,14 +58,14 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
     }
     
     // Try to match against presets
-    const matchedPreset = DATE_RANGE_OPTIONS.find((option) => {
+    const matchedPreset = dateRangeOptions.find((option) => {
       if (option.value === 'all') return false;
       const range = getDateRange(option.value);
       return range.start_date === start_date && range.end_date === end_date;
     });
     
     setDateRangePreset(matchedPreset?.value || 'custom');
-  }, [localFilters.start_date, localFilters.end_date]);
+  }, [localFilters.start_date, localFilters.end_date, dateRangeOptions]);
 
   useEffect(() => {
     onFiltersChange(localFilters);
