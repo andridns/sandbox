@@ -16,13 +16,13 @@ class ExcelImportService:
     
     # Common column name mappings (case-insensitive)
     COLUMN_MAPPINGS = {
-        'date': ['date', 'tanggal', 'transaction date', 'expense date'],
+        'date': ['date', 'tanggal', 'transaction date', 'expense date', 'timestamp'],
         'amount': ['amount', 'jumlah', 'total', 'price', 'harga', 'value'],
-        'description': ['description', 'deskripsi', 'note', 'notes', 'detail', 'item', 'merchant', 'store'],
+        'description': ['description', 'deskripsi', 'note', 'notes', 'detail', 'item', 'merchant', 'store', 'name', 'rawtext', 'raw text'],
         'category': ['category', 'kategori', 'type', 'jenis'],
         'payment_method': ['payment method', 'payment', 'method', 'cara bayar', 'metode pembayaran'],
         'location': ['location', 'lokasi', 'place', 'tempat'],
-        'notes': ['notes', 'note', 'catatan', 'remarks', 'keterangan'],
+        'notes': ['notes', 'note', 'catatan', 'remarks', 'keterangan', 'who', 'rawtext', 'raw text'],
         'currency': ['currency', 'mata uang', 'matauang'],
         'tags': ['tags', 'tag', 'label'],
     }
@@ -121,6 +121,31 @@ class ExcelImportService:
                 if value is not None:
                     row_data[field] = value
         
+        # Handle description field - prefer 'name' over 'rawtext' if both exist
+        if 'name' in row_data and 'rawtext' in row_data:
+            # Use Name as primary description, RawText as notes if available
+            if not row_data.get('description'):
+                row_data['description'] = row_data.get('name') or row_data.get('rawtext')
+            if not row_data.get('notes'):
+                rawtext = row_data.get('rawtext', '').strip()
+                name = row_data.get('name', '').strip()
+                if rawtext and rawtext != name:
+                    row_data['notes'] = rawtext
+        elif 'name' in row_data and not row_data.get('description'):
+            row_data['description'] = row_data['name']
+        elif 'rawtext' in row_data and not row_data.get('description'):
+            row_data['description'] = row_data['rawtext']
+        
+        # Handle 'who' field - add to notes if available
+        if 'who' in row_data and row_data['who']:
+            who_value = str(row_data['who']).strip()
+            if who_value:
+                existing_notes = row_data.get('notes', '')
+                if existing_notes:
+                    row_data['notes'] = f"{existing_notes} (by {who_value})"
+                else:
+                    row_data['notes'] = f"by {who_value}"
+        
         # Return None if row is empty
         if not row_data:
             return None
@@ -216,7 +241,23 @@ class ExcelImportService:
         
         value_str = str(value).strip()
         
-        # Try common date formats
+        # Try parsing datetime with time component first (e.g., "1/1/2026 20:55:47")
+        datetime_formats = [
+            '%m/%d/%Y %H:%M:%S',
+            '%d/%m/%Y %H:%M:%S',
+            '%Y-%m-%d %H:%M:%S',
+            '%m/%d/%Y %H:%M',
+            '%d/%m/%Y %H:%M',
+            '%Y-%m-%d %H:%M',
+        ]
+        
+        for fmt in datetime_formats:
+            try:
+                return datetime.strptime(value_str, fmt).date()
+            except ValueError:
+                continue
+        
+        # Try common date formats (without time)
         date_formats = [
             '%Y-%m-%d',
             '%d/%m/%Y',

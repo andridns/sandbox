@@ -68,11 +68,59 @@ async def import_excel(
     category_matches: Dict[str, int] = {}
     uncategorized_count = 0
     
+    # Get all categories for type mapping
+    all_categories = db.query(Category).all()
+    category_name_map = {cat.name.lower(): cat for cat in all_categories}
+    
+    # Type to category name mapping (common mappings)
+    type_to_category = {
+        'food': 'Food & Dining',
+        'misc': 'Other',
+        'childcare': 'Other',  # Could be a new category, but map to Other for now
+        'income': None,  # Skip income entries (they're not expenses)
+        'taxes': 'Bills & Utilities',
+        'housing': 'Bills & Utilities',
+        'vacation': 'Travel',
+        'travel': 'Travel',
+        'transportation': 'Transportation',
+        'shopping': 'Shopping',
+        'entertainment': 'Entertainment',
+        'healthcare': 'Healthcare',
+        'education': 'Education',
+        'personal care': 'Personal Care',
+        'gifts': 'Gifts & Donations',
+        'subscription': 'Subscriptions',
+    }
+    
     for idx, expense_data in enumerate(expenses_data, start=1):
         try:
-            # Smart category matching
-            description = expense_data.get('description', '')
-            matched_category = category_matcher.match(description)
+            # Skip if amount is 0 (like income entries)
+            if expense_data.get('amount', 0) == 0:
+                continue
+            
+            matched_category = None
+            
+            # First, try to match Type column to category
+            if 'category' in expense_data and expense_data['category']:
+                type_value = str(expense_data['category']).strip().lower()
+                
+                # Check direct type mapping
+                if type_value in type_to_category:
+                    category_name = type_to_category[type_value]
+                    if category_name and category_name.lower() in category_name_map:
+                        matched_category = category_name_map[category_name.lower()]
+                
+                # If no direct mapping, try to find category by similar name
+                if not matched_category:
+                    for cat_name, category in category_name_map.items():
+                        if type_value in cat_name or cat_name in type_value:
+                            matched_category = category
+                            break
+            
+            # If no match from Type column, use smart category matching on description
+            if not matched_category:
+                description = expense_data.get('description', '')
+                matched_category = category_matcher.match(description)
             
             if matched_category:
                 expense_data['category_id'] = matched_category.id
