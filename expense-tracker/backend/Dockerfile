@@ -17,15 +17,13 @@ RUN pip install --no-cache-dir poetry
 RUN poetry config virtualenvs.create false
 
 # Copy Poetry files
-# If building from repo root, use expense-tracker/backend/ prefix
-# If building from backend directory, files are in current directory
-COPY expense-tracker/backend/pyproject.toml expense-tracker/backend/poetry.lock ./
+COPY pyproject.toml poetry.lock ./
 
 # Install dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi
 
 # Copy application code
-COPY expense-tracker/backend/ ./
+COPY . .
 
 # Create uploads directory
 RUN mkdir -p uploads/receipts backups

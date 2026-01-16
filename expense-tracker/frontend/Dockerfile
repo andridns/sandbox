@@ -3,14 +3,14 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files (building from repo root)
-COPY expense-tracker/frontend/package*.json ./
+# Copy package files
+COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
 # Copy source code
-COPY expense-tracker/frontend/ ./
+COPY . .
 
 # Build the application
 # VITE_API_URL will be injected at build time
@@ -24,8 +24,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
 # If BACKEND_URL is set, use the template with proxy, otherwise use simple config
-COPY expense-tracker/frontend/nginx.conf /etc/nginx/conf.d/default.conf
-COPY expense-tracker/frontend/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Expose port
 EXPOSE 80

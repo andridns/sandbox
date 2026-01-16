@@ -1,7 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "expense-tracker/frontend/Dockerfile"
-watchPatterns = ["expense-tracker/frontend/**"]
+dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "nginx -g 'daemon off;'"

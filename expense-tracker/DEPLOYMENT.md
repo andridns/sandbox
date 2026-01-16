@@ -65,11 +65,11 @@ Ensure your code is pushed to GitHub with all the deployment files:
 4. **Configure the service:**
    - Click on the backend service
    - Go to "Settings" tab
-   - **IMPORTANT**: Do NOT set "Root Directory" - leave it empty/unset
+   - **IMPORTANT**: Set "Root Directory" to: `expense-tracker/backend`
    - **Important**: In the "Build" section:
      - Ensure "Builder" is set to "Dockerfile" (not "Railpack" or "Nixpacks")
-     - Set "Dockerfile Path" to: `expense-tracker/backend/Dockerfile`
-     - If you don't see "Dockerfile Path" option, click "Show Advanced" or look for "Dockerfile" field
+     - Set "Dockerfile Path" to: `Dockerfile` (relative to root directory)
+     - If you don't see "Dockerfile Path" option, Railway should auto-detect it when Root Directory is set
    - Go to "Variables" tab
    - Add the following environment variables:
 
@@ -99,11 +99,11 @@ PORT=8000
 3. **Configure the service:**
    - Click on the frontend service
    - Go to "Settings" tab
-   - **IMPORTANT**: Do NOT set "Root Directory" - leave it empty/unset
+   - **IMPORTANT**: Set "Root Directory" to: `expense-tracker/frontend`
    - **Important**: In the "Build" section:
      - Ensure "Builder" is set to "Dockerfile" (not "Railpack" or "Nixpacks")
-     - Set "Dockerfile Path" to: `expense-tracker/frontend/Dockerfile`
-     - If you don't see "Dockerfile Path" option, click "Show Advanced" or look for "Dockerfile" field
+     - Set "Dockerfile Path" to: `Dockerfile` (relative to root directory)
+     - If you don't see "Dockerfile Path" option, Railway should auto-detect it when Root Directory is set
    - Go to "Variables" tab
    - Add the following environment variables:
 
@@ -177,23 +177,33 @@ Railway provides free `.railway.app` domains by default. To use a custom domain:
 - This happens when Railway tries to auto-detect instead of using your Dockerfile
 - **Solution**: 
   1. Go to your service → "Settings" tab
-  2. Scroll to the "Build" section
-  3. Change "Builder" from "Railpack" or "Nixpacks" to "Dockerfile"
-  4. Set "Dockerfile Path" to `expense-tracker/backend/Dockerfile` (for backend) or `expense-tracker/frontend/Dockerfile` (for frontend)
-  5. Do NOT set "Root Directory" - leave it empty
+  2. Set "Root Directory" to `expense-tracker/backend` (for backend) or `expense-tracker/frontend` (for frontend)
+  3. Scroll to the "Build" section
+  4. Change "Builder" from "Railpack" or "Nixpacks" to "Dockerfile"
+  5. Set "Dockerfile Path" to `Dockerfile` (relative to root directory)
   6. Save and redeploy
 
 **"Dockerfile does not exist" error:**
 - Railway can't find the Dockerfile at the specified path
 - **Solution**:
-  1. Go to your service → "Settings" tab → "Build" section
-  2. Verify "Dockerfile Path" is set correctly:
-     - Backend: `expense-tracker/backend/Dockerfile`
-     - Frontend: `expense-tracker/frontend/Dockerfile`
-  3. Ensure "Builder" is set to "Dockerfile" (not Railpack/Nixpacks)
-  4. Do NOT set "Root Directory" - it should be empty
-  5. Verify the Dockerfile exists in your repository at that path
+  1. Go to your service → "Settings" tab
+  2. Set "Root Directory" to:
+     - Backend: `expense-tracker/backend`
+     - Frontend: `expense-tracker/frontend`
+  3. In "Build" section, set "Dockerfile Path" to: `Dockerfile` (relative to root directory)
+  4. Ensure "Builder" is set to "Dockerfile" (not Railpack/Nixpacks)
+  5. Verify the Dockerfile exists in your repository at `expense-tracker/backend/Dockerfile` or `expense-tracker/frontend/Dockerfile`
   6. Save and redeploy
+
+**"pyproject.toml not found" or "package.json not found" errors:**
+- This happens when Railway builds from the wrong context
+- **Solution**: 
+  1. Ensure "Root Directory" is set correctly:
+     - Backend: `expense-tracker/backend`
+     - Frontend: `expense-tracker/frontend`
+  2. Set "Dockerfile Path" to: `Dockerfile` (not the full path)
+  3. The Dockerfile uses relative paths (like `COPY pyproject.toml`) which work when Root Directory is set
+  4. Save and redeploy
 
 **Dockerfile not found:**
 - Verify the Dockerfile exists in the correct location
