@@ -39,8 +39,17 @@ const parseExpenseInput = (input: string): { amount: number | null; description:
   return { amount: null, description: trimmed };
 };
 
+const CURRENCIES = [
+  { code: 'IDR', name: 'Rupiah', symbol: 'Rp' },
+  { code: 'JPY', name: 'Yen', symbol: '¥' },
+  { code: 'USD', name: 'Dollar', symbol: '$' },
+  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+  { code: 'MYR', name: 'Ringgit', symbol: 'RM' },
+];
+
 const QuickExpenseForm = () => {
   const [input, setInput] = useState('');
+  const [currency, setCurrency] = useState('IDR');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('Cash');
@@ -61,6 +70,7 @@ const QuickExpenseForm = () => {
       setInput('');
       setCategoryId(null);
       setPaymentMethod('Cash');
+      setCurrency('IDR');
       setShowAdvanced(false);
       toast.success('Expense added!');
       inputRef.current?.focus();
@@ -83,7 +93,7 @@ const QuickExpenseForm = () => {
 
     createMutation.mutate({
       amount: parsed.amount!,
-      currency: 'IDR',
+      currency: currency,
       description: parsed.description || 'Expense',
       category_id: categoryId,
       date: new Date().toISOString().split('T')[0],
@@ -104,6 +114,25 @@ const QuickExpenseForm = () => {
           <label htmlFor="quick-input" className="block text-sm font-medium text-gray-700 mb-2">
             Quick Add Expense
           </label>
+          
+          {/* Currency Selection Buttons */}
+          <div className="flex gap-2 mb-3 flex-wrap">
+            {CURRENCIES.map((curr) => (
+              <button
+                key={curr.code}
+                type="button"
+                onClick={() => setCurrency(curr.code)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                  currency === curr.code
+                    ? 'bg-primary-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {curr.code} {curr.symbol}
+              </button>
+            ))}
+          </div>
+
           <div className="flex gap-2">
             <input
               ref={inputRef}
@@ -125,7 +154,7 @@ const QuickExpenseForm = () => {
           </div>
           {parsed.amount && (
             <div className="mt-2 text-sm text-gray-600">
-              <span className="font-semibold">{formatCurrency(parsed.amount, 'IDR')}</span>
+              <span className="font-semibold">{formatCurrency(parsed.amount, currency)}</span>
               {parsed.description && <span> • {parsed.description}</span>}
             </div>
           )}
