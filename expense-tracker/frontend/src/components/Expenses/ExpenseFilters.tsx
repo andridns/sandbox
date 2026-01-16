@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi, tagsApi } from '../../services/api';
 import type { ExpenseFilters } from '../../types';
-import { PAYMENT_METHODS, MIN_AMOUNT_OPTIONS } from '../../utils/constants';
+import { PAYMENT_METHODS, MIN_AMOUNT_OPTIONS, DATE_RANGE_OPTIONS, getDateRange, type DateRangePreset } from '../../utils/constants';
 
 interface ExpenseFiltersProps {
   filters: ExpenseFilters;
@@ -12,6 +12,22 @@ interface ExpenseFiltersProps {
 const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersProps) => {
   const [localFilters, setLocalFilters] = useState<ExpenseFilters>(filters);
   const [tagQuery, setTagQuery] = useState('');
+  
+  // Initialize date range preset based on filters
+  const getInitialDatePreset = (): DateRangePreset => {
+    const { start_date, end_date } = filters;
+    if (!start_date && !end_date) return 'all';
+    
+    const matchedPreset = DATE_RANGE_OPTIONS.find((option) => {
+      if (option.value === 'all') return false;
+      const range = getDateRange(option.value);
+      return range.start_date === start_date && range.end_date === end_date;
+    });
+    
+    return matchedPreset?.value || 'custom';
+  };
+  
+  const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>(getInitialDatePreset());
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -23,6 +39,30 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
     queryFn: () => tagsApi.getSuggestions(tagQuery),
     enabled: tagQuery.length > 0,
   });
+
+  // Sync localFilters when filters prop changes
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
+
+  // Detect current date range preset from filters
+  useEffect(() => {
+    const { start_date, end_date } = localFilters;
+    
+    if (!start_date && !end_date) {
+      setDateRangePreset('all');
+      return;
+    }
+    
+    // Try to match against presets
+    const matchedPreset = DATE_RANGE_OPTIONS.find((option) => {
+      if (option.value === 'all') return false;
+      const range = getDateRange(option.value);
+      return range.start_date === start_date && range.end_date === end_date;
+    });
+    
+    setDateRangePreset(matchedPreset?.value || 'custom');
+  }, [localFilters.start_date, localFilters.end_date]);
 
   useEffect(() => {
     onFiltersChange(localFilters);
@@ -41,8 +81,19 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
     }));
   };
 
+  const handleDateRangeChange = (preset: DateRangePreset) => {
+    setDateRangePreset(preset);
+    const range = getDateRange(preset);
+    setLocalFilters((prev) => ({
+      ...prev,
+      start_date: range.start_date,
+      end_date: range.end_date,
+    }));
+  };
+
   const clearFilters = () => {
     setLocalFilters({});
+    setDateRangePreset('all');
   };
 
   return (
@@ -91,22 +142,19 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
           </select>
         </div>
 
-        <div className="md:col-span-2 lg:col-span-1">
+        <div>
           <label className="block text-sm font-medium text-warm-gray-700 mb-2">Date Range</label>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="date"
-              value={localFilters.start_date || ''}
-              onChange={(e) => handleChange('start_date', e.target.value)}
-              className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
-            />
-            <input
-              type="date"
-              value={localFilters.end_date || ''}
-              onChange={(e) => handleChange('end_date', e.target.value)}
-              className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
-            />
-          </div>
+          <select
+            value={dateRangePreset}
+            onChange={(e) => handleDateRangeChange(e.target.value as DateRangePreset)}
+            className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+          >
+            {DATE_RANGE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
