@@ -87,7 +87,7 @@ ipython_config.py
 Pipfile.lock
 
 # poetry
-poetry.lock
+# poetry.lock - Keep this file committed for reproducible builds in production
 
 # pdm
 .pdm.toml

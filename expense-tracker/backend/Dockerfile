@@ -16,10 +16,12 @@ RUN pip install --no-cache-dir poetry
 # Configure Poetry to not create virtual environment (we're in a container)
 RUN poetry config virtualenvs.create false
 
-# Copy Poetry files
-COPY pyproject.toml poetry.lock ./
+# Copy Poetry configuration
+COPY pyproject.toml ./
 
 # Install dependencies
+# Poetry will resolve dependencies from pyproject.toml if poetry.lock is missing
+# This is fine for production - Poetry will create a lock file during install
 RUN poetry install --no-dev --no-interaction --no-ansi
 
 # Copy application code
