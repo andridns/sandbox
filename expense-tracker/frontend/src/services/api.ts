@@ -26,11 +26,37 @@ const api = axios.create({
   withCredentials: true, // Include cookies for session-based auth
 });
 
-// Add response interceptor to handle 401 errors
+// Token storage key
+const TOKEN_STORAGE_KEY = 'auth_token';
+
+// Add request interceptor to include Bearer token if available
+api.interceptors.request.use(
+  (config) => {
+    // Try to get token from localStorage (fallback for cross-site cookie issues)
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle 401 errors and store tokens
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If login response includes a token, store it
+    if (response.data?.token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, response.data.token);
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
+      // Clear token on 401
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
       // Only redirect to login if we're not already on the login page
       // This prevents redirect loops when checking auth status
       if (window.location.pathname !== '/login') {
@@ -221,18 +247,22 @@ export interface User {
   username?: string;
   email?: string;
   is_active: boolean;
+  token?: string;  // Bearer token for cross-site cookie fallback
 }
 
 export const authApi = {
   login: async (username: string, password: string): Promise<User> => {
     const response = await api.post<User>('/auth/login', { username, password });
+    // Token is automatically stored by interceptor
     return response.data;
   },
   googleLogin: async (idToken: string): Promise<User> => {
     const response = await api.post<User>('/auth/google', { id_token: idToken });
+    // Token is automatically stored by interceptor
     return response.data;
   },
   logout: async (): Promise<void> => {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
     await api.post('/auth/logout');
   },
   getCurrentUser: async (): Promise<User> => {

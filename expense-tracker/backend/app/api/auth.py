@@ -114,7 +114,16 @@ async def login(
             path="/"
         )
         
-        return user
+        # Also return token in response body for cross-site cookie fallback
+        # Browsers may block third-party cookies, so we provide Bearer token as backup
+        from app.schemas.auth import UserResponse
+        return UserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            token=session_token  # Include token for frontend to store and use as Bearer token
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -236,7 +245,16 @@ async def google_login(
             path="/"
         )
         
-        return user
+        # Also return token in response body for cross-site cookie fallback
+        # Browsers may block third-party cookies, so we provide Bearer token as backup
+        from app.schemas.auth import UserResponse
+        return UserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            token=session_token  # Include token for frontend to store and use as Bearer token
+        )
         
     except HTTPException:
         raise
