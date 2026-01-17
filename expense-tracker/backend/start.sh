@@ -36,6 +36,7 @@ fi
 
 # Always sync user credentials from environment variables
 # This allows updating credentials via Railway env vars (DEFAULT_USERNAME, DEFAULT_PASSWORD)
+# This also ensures the admin user exists even if seeding was skipped
 echo "Syncing user credentials from environment variables..."
 poetry run python -c "
 from app.database import SessionLocal
@@ -46,18 +47,25 @@ import os
 db = SessionLocal()
 try:
     username = os.getenv('DEFAULT_USERNAME', 'admin')
-    password = os.getenv('DEFAULT_PASSWORD')
+    password = os.getenv('DEFAULT_PASSWORD', 'admin123')  # Use default if not set
     
     user = db.query(User).filter(User.username == username).first()
-    if user and password:
+    if user:
+        # Update password if DEFAULT_PASSWORD is explicitly set, or use default
         user.password_hash = get_password_hash(password)
         user.is_active = True
         db.commit()
-        print(f'✓ Updated user \"{username}\" password from DEFAULT_PASSWORD environment variable')
-    elif user:
-        print(f'✓ User \"{username}\" exists (set DEFAULT_PASSWORD env var to update password)')
+        print(f'✓ Updated user \"{username}\" password')
     else:
-        print(f'⚠ User \"{username}\" not found (run seed script to create)')
+        # Create user if it doesn't exist
+        user = User(
+            username=username,
+            password_hash=get_password_hash(password),
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        print(f'✓ Created user \"{username}\"')
 finally:
     db.close()
 " || {
