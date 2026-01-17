@@ -7,18 +7,74 @@ This guide will help you set up Google OAuth authentication for the Expense Trac
 1. A Google account
 2. Access to [Google Cloud Console](https://console.cloud.google.com/)
 
-## Step 1: Create Google OAuth Credentials
+## Step 1: Create or Select a Project
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the **Google+ API** (or **Google Identity Services**)
-4. Go to **APIs & Services** → **Credentials**
-5. Click **Create Credentials** → **OAuth client ID**
-6. If prompted, configure the OAuth consent screen:
-   - Choose **External** (unless you have a Google Workspace)
-   - Fill in the required information (App name, User support email, etc.)
-   - Add your email and your partner's email as test users (if using External)
-   - Save and continue through the scopes and test users screens
+2. Click the project dropdown at the top (next to "Google Cloud")
+3. Either:
+   - **Create a new project**: Click "NEW PROJECT", enter a name (e.g., "Expense Tracker"), click "CREATE"
+   - **Select existing project**: Click on an existing project from the list
+4. Wait for the project to be created/selected (you'll see a notification)
+
+## Step 2: Configure OAuth Consent Screen
+
+1. In the left sidebar, click **"APIs & Services"** → **"OAuth consent screen"**
+   - (If you don't see this, click the ☰ menu icon to expand the sidebar)
+
+2. **App Information Section:**
+   - **App name***: Enter `Expense Tracker` (or your preferred name)
+   - **User support email***: Select your email from the dropdown
+   - Click **"Next"**
+
+3. **Audience Section:**
+   - Choose **"External"** (unless you have a Google Workspace account)
+   - Click **"Create"**
+
+4. **Scopes Section** (optional):
+   - You can skip this for now - default scopes are sufficient
+   - Click **"Save and Continue"**
+
+5. **Test Users Section** (if you chose External):
+   - Click **"+ ADD USERS"**
+   - Enter email addresses that should be able to sign in (e.g., `your-email@gmail.com`)
+   - Click **"Add"** for each email
+   - Click **"Save and Continue"**
+
+6. **Summary:**
+   - Review the information
+   - Click **"Back to Dashboard"**
+
+## Step 3: Create OAuth Credentials
+
+1. In the left sidebar, click **"APIs & Services"** → **"Credentials"**
+
+2. Click **"+ CREATE CREDENTIALS"** at the top of the page
+
+3. Select **"OAuth client ID"**
+
+4. **Configure OAuth Client:**
+   - **Application type**: Select **"Web application"**
+   - **Name**: Enter `Expense Tracker Web Client` (or your preferred name)
+
+5. **Authorized JavaScript origins:**
+   - Click **"+ ADD URI"**
+   - Enter: `http://localhost:5173` (for local development)
+   - Click **"+ ADD URI"** again and add your production URL if you have one:
+     - Example: `https://your-app.railway.app` or `https://yourdomain.com`
+
+6. **Authorized redirect URIs:**
+   - Click **"+ ADD URI"**
+   - Enter: `http://localhost:5173` (for local development)
+   - Click **"+ ADD URI"** again and add your production URL if you have one:
+     - Example: `https://your-app.railway.app` or `https://yourdomain.com`
+
+7. Click **"Create"**
+
+8. **Copy Your Client ID:**
+   - A popup will appear showing your **Client ID** and **Client Secret**
+   - **Copy the Client ID** (it looks like: `xxxxx-xxxxx.apps.googleusercontent.com`)
+   - ⚠️ **Important**: You only need the Client ID for this setup (not the Client Secret)
+   - Click **"OK"**
 
 ## Step 2: Configure OAuth Client
 
