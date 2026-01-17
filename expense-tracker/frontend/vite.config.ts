@@ -52,6 +52,7 @@ export default defineConfig({
     minify: 'esbuild',
   },
   server: {
+    host: '0.0.0.0', // Allow access from network (for mobile testing)
     port: 5173,
     proxy: {
       '/api': {

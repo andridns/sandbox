@@ -51,10 +51,13 @@ app = FastAPI(
 )
 
 # CORS configuration - allow origins from environment variable or default to localhost
-allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000"
-).split(",")
+# In development, allow all origins for easier mobile testing
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    allowed_origins = allowed_origins_env.split(",")
+else:
+    # Development mode: allow all origins for mobile testing
+    allowed_origins = ["*"]
 
 # CORS middleware
 app.add_middleware(
