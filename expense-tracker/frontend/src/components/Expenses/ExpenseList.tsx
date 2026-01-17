@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { formatDate } from '../../utils/format';
 import CurrencyDisplay from '../CurrencyDisplay';
-import type { Expense } from '../../types';
+import { categoriesApi } from '../../services/api';
+import type { Expense, Category } from '../../types';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -13,9 +15,53 @@ interface ExpenseListProps {
 type SortField = 'date' | 'description' | 'category' | 'amount' | 'payment';
 type SortDirection = 'asc' | 'desc';
 
+// Payment method emoji mapping
+const getPaymentMethodEmoji = (method: string): string => {
+  const emojiMap: Record<string, string> = {
+    'Cash': '💵',
+    'Debit Card': '💳',
+    'Credit Card': '💳',
+    'GoPay': '📱',
+    'OVO': '📱',
+    'DANA': '📱',
+    'LinkAja': '📱',
+    'ShopeePay': '📱',
+  };
+  return emojiMap[method] || '💳';
+};
+
+// Get category display (icon or abbreviation)
+const getCategoryDisplay = (category: Category | undefined): string => {
+  if (!category) return '📁';
+  if (category.icon) return category.icon;
+  // Use first 2-3 letters as abbreviation
+  return category.name.substring(0, 2).toUpperCase();
+};
+
+// Check if date is in the future
+const isFutureDate = (dateString: string): boolean => {
+  const expenseDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  expenseDate.setHours(0, 0, 0, 0);
+  return expenseDate > today;
+};
+
 const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Load categories to match with expenses
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAll(),
+  });
+
+  // Create category lookup map
+  const categoryMap = useMemo(() => {
+    if (!categories) return new Map<string, Category>();
+    return new Map(categories.map(cat => [cat.id, cat]));
+  }, [categories]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -125,49 +171,79 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
 
       {/* Mobile Card View */}
       <div className="md:hidden divide-y divide-modern-border/30">
-        {sortedExpenses.map((expense) => (
-          <div key={expense.id} className="p-4 hover:bg-primary-50/30 transition-colors">
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-modern-text text-sm">{expense.description}</span>
-                  {expense.is_recurring && (
-                    <span className="px-2 py-0.5 bg-gradient-accent/10 text-accent-600 text-xs rounded-lg font-medium border border-accent-200/50">
-                      🔄
-                    </span>
-                  )}
+        {sortedExpenses.map((expense) => {
+          const category = expense.category_id ? categoryMap.get(expense.category_id) : undefined;
+          const isFuture = isFutureDate(expense.date);
+          
+          return (
+            <div key={expense.id} className="p-2.5 hover:bg-primary-50/30 transition-colors">
+              {/* Top row: Description, Amount, Flags */}
+              <div className="flex justify-between items-start gap-2 mb-1.5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                    <span className="font-semibold text-modern-text text-sm truncate">{expense.description}</span>
+                    {expense.is_recurring && (
+                      <span className="text-xs" title="Recurring">🔄</span>
+                    )}
+                    {isFuture && (
+                      <span className="px-1 py-0.5 bg-yellow-100 text-yellow-700 text-[9px] rounded font-bold border border-yellow-300" title="Future expense">
+                        FUTURE
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-modern-text-light font-medium flex-wrap">
+                    <span>{formatDate(expense.date)}</span>
+                    {category && (
+                      <span className="flex items-center gap-1" title={category.name}>
+                        <span>{getCategoryDisplay(category)}</span>
+                        <span className="text-[9px]">{category.name.length > 10 ? category.name.substring(0, 10) + '...' : category.name}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xs text-modern-text-light font-medium">{formatDate(expense.date)}</div>
+                <div className="text-right flex-shrink-0">
+                  <CurrencyDisplay 
+                    amount={expense.amount} 
+                    currency={expense.currency}
+                    size="sm"
+                  />
+                </div>
               </div>
-              <div className="text-right">
-                <CurrencyDisplay 
-                  amount={expense.amount} 
-                  currency={expense.currency}
-                  size="sm"
-                />
+              
+              {/* Tags row */}
+              {expense.tags && expense.tags.length > 0 && (
+                <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                  {expense.tags.map((tag, idx) => (
+                    <span 
+                      key={idx}
+                      className="px-1 py-0.5 bg-primary-50 text-primary-700 text-[9px] rounded font-medium border border-primary-200/50"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Actions row */}
+              <div className="flex justify-end items-center pt-1.5 border-t border-modern-border/20">
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={() => onEdit(expense.id)}
+                    className="text-primary-600 hover:text-primary-700 font-semibold transition-colors text-[11px] hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => onDelete(expense.id)}
+                    className="text-red-500 hover:text-red-600 font-semibold transition-colors text-[11px] hover:underline"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center mt-3 pt-3 border-t border-modern-border/20">
-              <div className="text-xs text-modern-text-light font-medium">
-                <span className="mr-3">{expense.payment_method}</span>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => onEdit(expense.id)}
-                  className="text-primary-600 hover:text-primary-700 font-semibold transition-colors text-sm hover:underline"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(expense.id)}
-                  className="text-red-500 hover:text-red-600 font-semibold transition-colors text-sm hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Desktop Table View */}
@@ -211,14 +287,8 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                   {getSortIcon('category')}
                 </div>
               </th>
-              <th 
-                className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider cursor-pointer hover:bg-primary-50/30 transition-colors select-none"
-                onClick={() => handleSort('payment')}
-              >
-                <div className="flex items-center">
-                  Payment
-                  {getSortIcon('payment')}
-                </div>
+              <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">
+                Tags
               </th>
               <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">
                 Actions
@@ -226,48 +296,85 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
             </tr>
           </thead>
           <tbody className="divide-y divide-modern-border/30">
-            {sortedExpenses.map((expense) => (
-              <tr key={expense.id} className="hover:bg-primary-50/20 transition-colors">
-                <td className="px-5 py-4 text-sm text-modern-text font-medium">
-                  {formatDate(expense.date)}
-                </td>
-                <td className="px-5 py-4 text-sm text-modern-text font-semibold">
-                  <div className="flex items-center gap-2">
-                    {expense.description}
-                    {expense.is_recurring && (
-                      <span className="px-2.5 py-1 bg-gradient-accent/10 text-accent-600 text-xs rounded-lg font-medium border border-accent-200/50">
-                        🔄
-                      </span>
+            {sortedExpenses.map((expense) => {
+              const category = expense.category_id ? categoryMap.get(expense.category_id) : undefined;
+              const isFuture = isFutureDate(expense.date);
+              
+              return (
+                <tr key={expense.id} className="hover:bg-primary-50/20 transition-colors">
+                  <td className="px-5 py-3 text-sm text-modern-text font-medium">
+                    <div className="flex items-center gap-2">
+                      {formatDate(expense.date)}
+                      {isFuture && (
+                        <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] rounded font-semibold border border-yellow-300">
+                          FUTURE
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 text-sm text-modern-text font-semibold">
+                    <div className="flex items-center gap-2">
+                      {expense.description}
+                      {expense.is_recurring && (
+                        <span className="text-xs" title="Recurring">🔄</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 text-sm font-bold text-modern-text">
+                    <CurrencyDisplay 
+                      amount={expense.amount} 
+                      currency={expense.currency}
+                      size="sm"
+                    />
+                  </td>
+                  <td className="px-5 py-3 text-sm text-modern-text-light font-medium">
+                    {category ? (
+                      <div className="flex items-center gap-1.5" title={category.name}>
+                        <span>{getCategoryDisplay(category)}</span>
+                        <span>{category.name.length > 15 ? category.name.substring(0, 15) + '...' : category.name}</span>
+                      </div>
+                    ) : (
+                      '-'
                     )}
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-sm font-bold text-modern-text">
-                  <CurrencyDisplay 
-                    amount={expense.amount} 
-                    currency={expense.currency}
-                    size="sm"
-                  />
-                </td>
-                <td className="px-5 py-4 text-sm text-modern-text-light font-medium">-</td>
-                <td className="px-5 py-4 text-sm text-modern-text-light font-medium">{expense.payment_method}</td>
-                <td className="px-5 py-4 text-sm">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => onEdit(expense.id)}
-                      className="text-primary-600 hover:text-primary-700 font-semibold transition-colors hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(expense.id)}
-                      className="text-red-500 hover:text-red-600 font-semibold transition-colors hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-5 py-3 text-sm">
+                    {expense.tags && expense.tags.length > 0 ? (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {expense.tags.slice(0, 3).map((tag, idx) => (
+                          <span 
+                            key={idx}
+                            className="px-1.5 py-0.5 bg-primary-50 text-primary-700 text-[10px] rounded font-medium border border-primary-200/50"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                        {expense.tags.length > 3 && (
+                          <span className="text-[10px] text-modern-text-light">+{expense.tags.length - 3}</span>
+                        )}
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-sm">
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => onEdit(expense.id)}
+                        className="text-primary-600 hover:text-primary-700 font-semibold transition-colors hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => onDelete(expense.id)}
+                        className="text-red-500 hover:text-red-600 font-semibold transition-colors hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

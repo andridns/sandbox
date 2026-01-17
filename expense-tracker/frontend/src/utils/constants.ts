@@ -4,6 +4,31 @@ export const CURRENCIES = [
   { code: 'USD', name: 'Dollar', symbol: '$' },
   { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
   { code: 'MYR', name: 'Ringgit', symbol: 'RM' },
+  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+] as const;
+
+// Other currencies for the dropdown
+export const OTHER_CURRENCIES = [
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
+  { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$' },
+  { code: 'NZD', name: 'New Zealand Dollar', symbol: 'NZ$' },
+  { code: 'KRW', name: 'South Korean Won', symbol: '₩' },
+  { code: 'THB', name: 'Thai Baht', symbol: '฿' },
+  { code: 'PHP', name: 'Philippine Peso', symbol: '₱' },
+  { code: 'VND', name: 'Vietnamese Dong', symbol: '₫' },
+  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+  { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' },
+  { code: 'MXN', name: 'Mexican Peso', symbol: 'Mex$' },
+  { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
+  { code: 'RUB', name: 'Russian Ruble', symbol: '₽' },
+  { code: 'TRY', name: 'Turkish Lira', symbol: '₺' },
+  { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
+  { code: 'SAR', name: 'Saudi Riyal', symbol: '﷼' },
+  { code: 'BND', name: 'Brunei Dollar', symbol: 'B$' },
 ] as const;
 
 export const PAYMENT_METHODS = [

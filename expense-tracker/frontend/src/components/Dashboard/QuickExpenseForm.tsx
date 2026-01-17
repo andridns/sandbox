@@ -3,7 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { expensesApi, categoriesApi } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
-import { CURRENCIES, PAYMENT_METHODS } from '../../utils/constants';
+import { CURRENCIES, OTHER_CURRENCIES } from '../../utils/constants';
 
 // Smart parsing function: "100000 lunch" -> { amount: 100000, description: "lunch" }
 const parseExpenseInput = (input: string): { amount: number | null; description: string } => {
@@ -33,14 +33,25 @@ const QuickExpenseForm = () => {
   const [input, setInput] = useState('');
   const [currency, setCurrency] = useState('IDR');
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [showOtherCurrencies, setShowOtherCurrencies] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.getAll(),
   });
+
+  // Set "Other" category as default when categories load
+  useEffect(() => {
+    if (categories && categories.length > 0 && !categoryId) {
+      const otherCategory = categories.find(cat => cat.name === 'Other');
+      if (otherCategory) {
+        setCategoryId(otherCategory.id);
+      }
+    }
+  }, [categories, categoryId]);
 
   const createMutation = useMutation({
     mutationFn: expensesApi.create,
@@ -49,9 +60,10 @@ const QuickExpenseForm = () => {
       queryClient.invalidateQueries({ queryKey: ['summary'] });
       queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
       setInput('');
-      setCategoryId(null);
-      setPaymentMethod('Cash');
       setCurrency('IDR');
+      // Reset to "Other" category
+      const otherCategory = categories?.find(cat => cat.name === 'Other');
+      setCategoryId(otherCategory?.id || null);
       toast.success('Expense added!');
       inputRef.current?.focus();
     },
@@ -77,7 +89,7 @@ const QuickExpenseForm = () => {
       description: parsed.description || 'Expense',
       category_id: categoryId,
       date: new Date().toISOString().split('T')[0],
-      payment_method: paymentMethod,
+      payment_method: 'Cash', // Default payment method
       tags: [],
       is_recurring: false,
     });
@@ -86,6 +98,38 @@ const QuickExpenseForm = () => {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowOtherCurrencies(false);
+      }
+    };
+
+    if (showOtherCurrencies) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showOtherCurrencies]);
+
+  // Check if current currency is from OTHER_CURRENCIES
+  const isOtherCurrency = OTHER_CURRENCIES.some(curr => curr.code === currency);
+  
+  // Get current currency display info
+  const getCurrentCurrencyInfo = () => {
+    const mainCurrency = CURRENCIES.find(c => c.code === currency);
+    if (mainCurrency) return mainCurrency;
+    return OTHER_CURRENCIES.find(c => c.code === currency);
+  };
+
+  const handleOtherCurrencySelect = (selectedCurrency: string) => {
+    setCurrency(selectedCurrency);
+    setShowOtherCurrencies(false);
+  };
 
   return (
     <div className="glass rounded-2xl shadow-modern-lg border border-modern-border/50 p-4 md:p-8 max-w-3xl mx-auto">
@@ -96,14 +140,14 @@ const QuickExpenseForm = () => {
           </label>
           
           {/* Currency Selection Buttons */}
-          <div className="flex gap-2 md:gap-3 mb-5 flex-wrap">
+          <div className="flex gap-2 md:gap-3 mb-5 flex-wrap relative">
             {CURRENCIES.map((curr) => (
               <button
                 key={curr.code}
                 type="button"
                 onClick={() => setCurrency(curr.code)}
                 className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
-                  currency === curr.code
+                  currency === curr.code && !isOtherCurrency
                     ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
                     : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
                 }`}
@@ -111,6 +155,46 @@ const QuickExpenseForm = () => {
                 {curr.code} {curr.symbol}
               </button>
             ))}
+            
+            {/* Other Currencies Button */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowOtherCurrencies(!showOtherCurrencies)}
+                className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+                  isOtherCurrency
+                    ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                    : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                }`}
+              >
+                {isOtherCurrency 
+                  ? `${getCurrentCurrencyInfo()?.code} ${getCurrentCurrencyInfo()?.symbol}`
+                  : 'Other currencies ▼'
+                }
+              </button>
+              
+              {/* Dropdown */}
+              {showOtherCurrencies && (
+                <div className="absolute top-full left-0 mt-2 bg-white border-2 border-modern-border/50 rounded-xl shadow-modern-lg z-50 max-h-64 overflow-y-auto min-w-[200px]">
+                  <div className="p-2">
+                    {OTHER_CURRENCIES.map((curr) => (
+                      <button
+                        key={curr.code}
+                        type="button"
+                        onClick={() => handleOtherCurrencySelect(curr.code)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currency === curr.code
+                            ? 'bg-primary-100 text-primary-700'
+                            : 'text-modern-text hover:bg-primary-50'
+                        }`}
+                      >
+                        <span className="font-semibold">{curr.code}</span> {curr.symbol} - {curr.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-3">
@@ -140,7 +224,7 @@ const QuickExpenseForm = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-warm-gray-200">
+        <div className="pt-5 border-t border-warm-gray-200">
             <div>
               <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                 Category
@@ -150,27 +234,9 @@ const QuickExpenseForm = () => {
                 onChange={(e) => setCategoryId(e.target.value || null)}
                 className="w-full px-4 py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
               >
-                <option value="">No category</option>
                 {categories?.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-                Payment Method
-              </label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
-              >
-                {PAYMENT_METHODS.map((method) => (
-                  <option key={method} value={method}>
-                    {method}
                   </option>
                 ))}
               </select>

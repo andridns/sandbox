@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { expensesApi, categoriesApi, uploadApi, tagsApi } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import type { ExpenseCreate, ExpenseUpdate } from '../../types';
-import { CURRENCIES, PAYMENT_METHODS } from '../../utils/constants';
+import { CURRENCIES, OTHER_CURRENCIES } from '../../utils/constants';
 
 interface ExpenseFormProps {
   expenseId?: string | null;
@@ -19,7 +19,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
     category_id: null,
     date: new Date().toISOString().split('T')[0],
     tags: [],
-    payment_method: 'Cash',
+    payment_method: 'Cash', // Default payment method
     receipt_url: null,
     location: null,
     notes: null,
@@ -32,6 +32,17 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
     queryKey: ['categories'],
     queryFn: () => categoriesApi.getAll(),
   });
+
+  // Set "Other" category as default when categories load (only for new expenses)
+  useEffect(() => {
+    if (!expenseId && categories && categories.length > 0) {
+      const otherCategory = categories.find(cat => cat.name === 'Other');
+      if (otherCategory && !formData.category_id) {
+        setFormData(prev => ({ ...prev, category_id: otherCategory.id }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories, expenseId]);
 
   const { data: expense } = useQuery({
     queryKey: ['expense', expenseId],
@@ -97,9 +108,6 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
     }
     if (formData.amount <= 0) {
       newErrors.amount = 'Amount must be greater than 0';
-    }
-    if (!formData.payment_method) {
-      newErrors.payment_method = 'Payment method is required';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -197,6 +205,13 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                       {curr.code} - {curr.name}
                     </option>
                   ))}
+                  <optgroup label="Other Currencies">
+                    {OTHER_CURRENCIES.map((curr) => (
+                      <option key={curr.code} value={curr.code}>
+                        {curr.code} - {curr.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
 
@@ -234,7 +249,6 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                   }
                   className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 >
-                  <option value="">Select category</option>
                   {categories?.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -256,30 +270,6 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-                  Payment Method *
-                </label>
-                <select
-                  value={formData.payment_method}
-                  onChange={(e) =>
-                    setFormData({ ...formData, payment_method: e.target.value })
-                  }
-                  className={`w-full px-3 py-2.5 md:px-4 md:py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base ${
-                    errors.payment_method ? 'border-red-400' : 'border-warm-gray-200'
-                  }`}
-                  required
-                >
-                  {PAYMENT_METHODS.map((method) => (
-                    <option key={method} value={method}>
-                      {method}
-                    </option>
-                  ))}
-                </select>
-                {errors.payment_method && (
-                  <p className="text-red-500 text-xs mt-1">{errors.payment_method}</p>
-                )}
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-warm-gray-700 mb-2">
