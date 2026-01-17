@@ -25,13 +25,13 @@ const BudgetCard = ({ budget, startDate, endDate }: BudgetCardProps) => {
   const isOverBudget = spent > budget.amount;
 
   return (
-    <div className="border-2 border-warm-gray-200 rounded-xl p-5 bg-beige-50">
+    <div className="border-2 border-warm-gray-200 rounded-xl p-4 md:p-5 bg-beige-50">
       <div className="flex justify-between items-start mb-3">
-        <div>
-          <h4 className="font-semibold text-warm-gray-800">
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-warm-gray-800 text-sm md:text-base">
             {budget.category_id ? 'Category Budget' : 'Total Budget'}
           </h4>
-          <p className="text-sm text-warm-gray-600 mt-1">
+          <p className="text-xs md:text-sm text-warm-gray-600 mt-1">
             <CurrencyDisplay 
               amount={budget.amount} 
               currency={budget.currency}
@@ -40,7 +40,7 @@ const BudgetCard = ({ budget, startDate, endDate }: BudgetCardProps) => {
           </p>
         </div>
         <span
-          className={`px-3 py-1.5 rounded-xl text-sm font-medium ${
+          className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-xl text-xs md:text-sm font-medium ml-2 flex-shrink-0 ${
             isOverBudget
               ? 'bg-red-100 text-red-700'
               : percentage > 80
@@ -51,9 +51,9 @@ const BudgetCard = ({ budget, startDate, endDate }: BudgetCardProps) => {
           {percentage.toFixed(1)}%
         </span>
       </div>
-      <div className="w-full bg-warm-gray-200 rounded-full h-2.5 mb-3">
+      <div className="w-full bg-warm-gray-200 rounded-full h-2 md:h-2.5 mb-3">
         <div
-          className={`h-2.5 rounded-full transition-all ${
+          className={`h-2 md:h-2.5 rounded-full transition-all ${
             isOverBudget
               ? 'bg-red-500'
               : percentage > 80
@@ -63,7 +63,7 @@ const BudgetCard = ({ budget, startDate, endDate }: BudgetCardProps) => {
           style={{ width: `${Math.min(percentage, 100)}%` }}
         ></div>
       </div>
-      <div className="flex justify-between text-sm text-warm-gray-600">
+      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0 text-xs md:text-sm text-warm-gray-600">
         <span>
           Spent: <CurrencyDisplay 
             amount={spent} 
@@ -101,17 +101,17 @@ const BudgetCards = () => {
 
   if (currentBudgets.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-apple">
-        <h3 className="text-lg font-semibold text-warm-gray-800 mb-4">Budgets</h3>
-        <p className="text-warm-gray-500">No budgets set for this month</p>
+      <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-apple">
+        <h3 className="text-base md:text-lg font-semibold text-warm-gray-800 mb-3 md:mb-4">Budgets</h3>
+        <p className="text-sm md:text-base text-warm-gray-500">No budgets set for this month</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-apple">
-      <h3 className="text-lg font-semibold text-warm-gray-800 mb-5">Current Budgets</h3>
-      <div className="space-y-4">
+    <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-apple">
+      <h3 className="text-base md:text-lg font-semibold text-warm-gray-800 mb-4 md:mb-5">Current Budgets</h3>
+      <div className="space-y-3 md:space-y-4">
         {currentBudgets.map((budget) => (
           <BudgetCard
             key={budget.id}

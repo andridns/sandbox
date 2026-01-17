@@ -116,16 +116,16 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+      <div className="bg-white rounded-xl md:rounded-lg shadow-xl max-w-lg w-full mx-2 md:mx-4 max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 md:p-6">
+          <div className="flex justify-between items-center mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-warm-gray-800">
               {budgetId ? 'Edit Budget' : 'Add Budget'}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-warm-gray-500 hover:text-warm-gray-700 text-2xl md:text-3xl transition-colors"
             >
               ×
             </button>
@@ -133,19 +133,19 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Budget Type
-              </label>
-              <select
-                value={formData.category_id || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    category_id: e.target.value || null,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
+                  Budget Type
+                </label>
+                <select
+                  value={formData.category_id || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      category_id: e.target.value || null,
+                    })
+                  }
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
+                >
                 <option value="">Total Budget</option>
                 {categories?.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -155,9 +155,9 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Amount *
                 </label>
                 <input
@@ -170,8 +170,8 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
                       amount: parseFloat(e.target.value) || 0,
                     })
                   }
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-3 py-2.5 md:px-4 md:py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base ${
+                    errors.amount ? 'border-red-400' : 'border-warm-gray-200'
                   }`}
                   required
                 />
@@ -181,7 +181,7 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Currency
                 </label>
                 <select
@@ -189,7 +189,7 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, currency: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 >
                   {CURRENCIES.map((curr) => (
                     <option key={curr.code} value={curr.code}>
@@ -201,17 +201,17 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                 Period *
               </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => handlePeriodChange('monthly')}
-                  className={`flex-1 px-4 py-2 rounded-lg ${
+                  className={`flex-1 px-4 py-2.5 md:py-3 rounded-xl font-medium text-sm md:text-base transition-colors ${
                     formData.period === 'monthly'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-primary-400 text-white shadow-apple'
+                      : 'bg-beige-100 text-warm-gray-700 hover:bg-beige-200'
                   }`}
                 >
                   Monthly
@@ -219,10 +219,10 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
                 <button
                   type="button"
                   onClick={() => handlePeriodChange('yearly')}
-                  className={`flex-1 px-4 py-2 rounded-lg ${
+                  className={`flex-1 px-4 py-2.5 md:py-3 rounded-xl font-medium text-sm md:text-base transition-colors ${
                     formData.period === 'yearly'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-primary-400 text-white shadow-apple'
+                      : 'bg-beige-100 text-warm-gray-700 hover:bg-beige-200'
                   }`}
                 >
                   Yearly
@@ -230,9 +230,9 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Start Date *
                 </label>
                 <input
@@ -241,13 +241,13 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, start_date: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   End Date *
                 </label>
                 <input
@@ -256,8 +256,8 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, end_date: e.target.value })
                   }
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 ${
-                    errors.end_date ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-3 py-2.5 md:px-4 md:py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base ${
+                    errors.end_date ? 'border-red-400' : 'border-warm-gray-200'
                   }`}
                   required
                 />
@@ -267,18 +267,18 @@ const BudgetForm = ({ budgetId, onClose, onSuccess }: BudgetFormProps) => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                className="w-full sm:w-auto px-4 py-2.5 md:py-3 text-warm-gray-700 bg-beige-100 rounded-xl hover:bg-beige-200 transition-colors font-medium text-sm md:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 md:py-3 bg-primary-400 text-white rounded-xl hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm md:text-base shadow-apple hover:shadow-apple-lg"
               >
                 {createMutation.isPending || updateMutation.isPending
                   ? 'Saving...'

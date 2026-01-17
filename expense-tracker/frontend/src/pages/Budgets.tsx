@@ -41,12 +41,12 @@ const Budgets = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-semibold text-warm-gray-800">Budgets</h2>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h2 className="text-2xl md:text-3xl font-semibold text-warm-gray-800">Budgets</h2>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-primary-400 text-white px-6 py-3 rounded-xl hover:bg-primary-500 transition-all shadow-apple hover:shadow-apple-lg font-medium"
+          className="w-full sm:w-auto bg-primary-400 text-white px-4 py-2.5 md:px-6 md:py-3 rounded-xl hover:bg-primary-500 transition-all shadow-apple hover:shadow-apple-lg font-medium text-sm md:text-base"
         >
           + Add Budget
         </button>

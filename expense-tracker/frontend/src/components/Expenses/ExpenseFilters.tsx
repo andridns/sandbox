@@ -100,8 +100,8 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-apple">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="bg-white p-4 md:p-6 rounded-2xl shadow-apple">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
         <div>
           <label className="block text-sm font-medium text-warm-gray-700 mb-2">Search</label>
           <input
@@ -109,7 +109,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
             value={localFilters.search || ''}
             onChange={(e) => handleChange('search', e.target.value)}
             placeholder="Search expenses..."
-            className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+            className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
           />
         </div>
 
@@ -118,7 +118,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
           <select
             value={localFilters.category_id || ''}
             onChange={(e) => handleChange('category_id', e.target.value)}
-            className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+            className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
           >
             <option value="">All Categories</option>
             {categories?.map((cat) => (
@@ -134,7 +134,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
           <select
             value={localFilters.payment_method || ''}
             onChange={(e) => handleChange('payment_method', e.target.value)}
-            className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+            className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
           >
             <option value="">All Methods</option>
             {PAYMENT_METHODS.map((method) => (
@@ -150,7 +150,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
           <select
             value={dateRangePreset}
             onChange={(e) => handleDateRangeChange(e.target.value as DateRangePreset)}
-            className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+            className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
           >
             {dateRangeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -165,7 +165,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
           <select
             value={localFilters.min_amount || ''}
             onChange={(e) => handleMinAmountChange(e.target.value)}
-            className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+            className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
           >
             {MIN_AMOUNT_OPTIONS.map((option) => (
               <option key={option.value || 'all'} value={option.value || ''}>
@@ -191,7 +191,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
                 }, 200);
               }}
               placeholder="Enter tags..."
-              className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
             />
             {tagSuggestions && tagSuggestions.length > 0 && tagQuery && (
               <div className="absolute z-20 mt-1 w-full bg-white border-2 border-warm-gray-200 rounded-xl shadow-apple-lg p-2 max-h-48 overflow-y-auto">
@@ -218,10 +218,10 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
         </div>
       </div>
 
-      <div className="mt-6 flex justify-end">
+      <div className="mt-4 md:mt-6 flex justify-end">
         <button
           onClick={clearFilters}
-          className="px-5 py-2.5 text-warm-gray-700 bg-beige-100 rounded-xl hover:bg-beige-200 transition-colors font-medium"
+          className="w-full sm:w-auto px-4 py-2.5 md:px-5 text-warm-gray-700 bg-beige-100 rounded-xl hover:bg-beige-200 transition-colors font-medium text-sm md:text-base"
         >
           Clear Filters
         </button>

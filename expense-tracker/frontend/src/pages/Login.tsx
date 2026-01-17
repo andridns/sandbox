@@ -91,14 +91,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-beige-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-warm-gray-800 mb-2">Expense Tracker</h1>
-          <p className="text-warm-gray-600">Please sign in to continue</p>
+    <div className="min-h-screen bg-beige-50 flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white rounded-xl md:rounded-lg shadow-apple-lg md:shadow-lg p-6 md:p-8">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-warm-gray-800 mb-2">Expense Tracker</h1>
+          <p className="text-sm md:text-base text-warm-gray-600">Please sign in to continue</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-warm-gray-700 mb-2">
               Username
@@ -109,7 +109,7 @@ const Login = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-all text-sm md:text-base"
               placeholder="Enter your username"
               autoComplete="username"
             />
@@ -125,7 +125,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-warm-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-all text-sm md:text-base"
               placeholder="Enter your password"
               autoComplete="current-password"
             />
@@ -134,7 +134,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-500 text-white py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary-400 text-white py-3 md:py-3.5 rounded-xl md:rounded-lg font-medium hover:bg-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base shadow-apple hover:shadow-apple-lg"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

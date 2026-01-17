@@ -108,27 +108,27 @@ const ExcelImport = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-apple-lg p-8">
-      <h2 className="text-2xl font-semibold text-warm-gray-800 mb-6">Import Expenses from Excel</h2>
+    <div className="bg-white rounded-xl md:rounded-2xl shadow-apple-lg p-4 md:p-8">
+      <h2 className="text-xl md:text-2xl font-semibold text-warm-gray-800 mb-4 md:mb-6">Import Expenses from Excel</h2>
       
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* File Upload Area */}
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${
+          className={`border-2 border-dashed rounded-xl p-6 md:p-12 text-center transition-all ${
             isDragging
               ? 'border-primary-400 bg-primary-50'
               : 'border-warm-gray-300 hover:border-primary-300'
           }`}
         >
           {file ? (
-            <div className="space-y-4">
-              <div className="text-primary-500 text-4xl">📄</div>
+            <div className="space-y-3 md:space-y-4">
+              <div className="text-primary-500 text-3xl md:text-4xl">📄</div>
               <div>
-                <p className="text-lg font-medium text-warm-gray-800">{file.name}</p>
-                <p className="text-sm text-warm-gray-500 mt-1">
+                <p className="text-base md:text-lg font-medium text-warm-gray-800 break-words">{file.name}</p>
+                <p className="text-xs md:text-sm text-warm-gray-500 mt-1">
                   {(file.size / 1024).toFixed(2)} KB
                 </p>
               </div>
@@ -139,27 +139,27 @@ const ExcelImport = () => {
                     fileInputRef.current.value = '';
                   }
                 }}
-                className="text-sm text-warm-gray-600 hover:text-warm-gray-800"
+                className="text-xs md:text-sm text-warm-gray-600 hover:text-warm-gray-800"
               >
                 Remove file
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="text-warm-gray-400 text-5xl">📊</div>
+            <div className="space-y-3 md:space-y-4">
+              <div className="text-warm-gray-400 text-4xl md:text-5xl">📊</div>
               <div>
-                <p className="text-lg font-medium text-warm-gray-700 mb-2">
+                <p className="text-base md:text-lg font-medium text-warm-gray-700 mb-2">
                   Drag and drop your Excel file here
                 </p>
-                <p className="text-sm text-warm-gray-500">or</p>
+                <p className="text-xs md:text-sm text-warm-gray-500">or</p>
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-6 py-3 bg-primary-400 text-white rounded-xl hover:bg-primary-500 transition-all shadow-apple font-medium"
+                className="w-full sm:w-auto px-6 py-2.5 md:py-3 bg-primary-400 text-white rounded-xl hover:bg-primary-500 transition-all shadow-apple font-medium text-sm md:text-base"
               >
                 Browse Files
               </button>
-              <p className="text-xs text-warm-gray-500 mt-4">
+              <p className="text-xs text-warm-gray-500 mt-3 md:mt-4">
                 Supported formats: .xlsx, .xls (Max 10MB)
               </p>
             </div>
@@ -175,11 +175,11 @@ const ExcelImport = () => {
         </div>
 
         {/* File Format Info */}
-        <div className="bg-beige-50 rounded-xl p-5 border border-warm-gray-200">
-          <h3 className="text-sm font-semibold text-warm-gray-800 mb-3">
+        <div className="bg-beige-50 rounded-xl p-4 md:p-5 border border-warm-gray-200">
+          <h3 className="text-xs md:text-sm font-semibold text-warm-gray-800 mb-2 md:mb-3">
             Excel File Format Requirements
           </h3>
-          <ul className="text-sm text-warm-gray-600 space-y-2">
+          <ul className="text-xs md:text-sm text-warm-gray-600 space-y-1.5 md:space-y-2">
             <li className="flex items-start">
               <span className="mr-2">✓</span>
               <span><strong>Required columns:</strong> Date, Amount, Description</span>
@@ -208,7 +208,7 @@ const ExcelImport = () => {
           <button
             onClick={handleImport}
             disabled={!file || importMutation.isPending}
-            className="px-8 py-3 bg-primary-400 text-white rounded-xl hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-apple hover:shadow-apple-lg font-medium"
+            className="w-full sm:w-auto px-6 md:px-8 py-2.5 md:py-3 bg-primary-400 text-white rounded-xl hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-apple hover:shadow-apple-lg font-medium text-sm md:text-base"
           >
             {importMutation.isPending ? 'Importing...' : 'Import Expenses'}
           </button>
@@ -216,38 +216,38 @@ const ExcelImport = () => {
 
         {/* Import Results */}
         {importMutation.data && (
-          <div className="mt-6 border-t border-warm-gray-200 pt-6">
-            <h3 className="text-lg font-semibold text-warm-gray-800 mb-4">Import Results</h3>
+          <div className="mt-4 md:mt-6 border-t border-warm-gray-200 pt-4 md:pt-6">
+            <h3 className="text-base md:text-lg font-semibold text-warm-gray-800 mb-3 md:mb-4">Import Results</h3>
             
-            <div className={`grid grid-cols-2 gap-4 mb-6 ${importMutation.data.summary.categories_imported !== undefined ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
-              <div className="bg-beige-50 rounded-xl p-4">
-                <p className="text-sm text-warm-gray-600">Total Rows</p>
-                <p className="text-2xl font-bold text-warm-gray-800">
+            <div className={`grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 ${importMutation.data.summary.categories_imported !== undefined ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-2 lg:grid-cols-4'}`}>
+              <div className="bg-beige-50 rounded-xl p-3 md:p-4">
+                <p className="text-xs md:text-sm text-warm-gray-600">Total Rows</p>
+                <p className="text-xl md:text-2xl font-bold text-warm-gray-800">
                   {importMutation.data.summary.total_rows}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-xl p-4">
-                <p className="text-sm text-warm-gray-600">Imported</p>
-                <p className="text-2xl font-bold text-green-600">
+              <div className="bg-green-50 rounded-xl p-3 md:p-4">
+                <p className="text-xs md:text-sm text-warm-gray-600">Imported</p>
+                <p className="text-xl md:text-2xl font-bold text-green-600">
                   {importMutation.data.summary.imported}
                 </p>
               </div>
-              <div className="bg-red-50 rounded-xl p-4">
-                <p className="text-sm text-warm-gray-600">Failed</p>
-                <p className="text-2xl font-bold text-red-600">
+              <div className="bg-red-50 rounded-xl p-3 md:p-4">
+                <p className="text-xs md:text-sm text-warm-gray-600">Failed</p>
+                <p className="text-xl md:text-2xl font-bold text-red-600">
                   {importMutation.data.summary.failed}
                 </p>
               </div>
-              <div className="bg-yellow-50 rounded-xl p-4">
-                <p className="text-sm text-warm-gray-600">Uncategorized</p>
-                <p className="text-2xl font-bold text-yellow-600">
+              <div className="bg-yellow-50 rounded-xl p-3 md:p-4">
+                <p className="text-xs md:text-sm text-warm-gray-600">Uncategorized</p>
+                <p className="text-xl md:text-2xl font-bold text-yellow-600">
                   {importMutation.data.summary.uncategorized}
                 </p>
               </div>
               {importMutation.data.summary.categories_imported !== undefined && (
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-sm text-warm-gray-600">Categories</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                <div className="bg-blue-50 rounded-xl p-3 md:p-4">
+                  <p className="text-xs md:text-sm text-warm-gray-600">Categories</p>
+                  <p className="text-xl md:text-2xl font-bold text-blue-600">
                     {importMutation.data.summary.categories_imported}
                   </p>
                 </div>
@@ -256,13 +256,13 @@ const ExcelImport = () => {
 
             {/* Category Matches */}
             {Object.keys(importMutation.data.category_matches).length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-sm font-semibold text-warm-gray-700 mb-3">Category Matches</h4>
-                <div className="flex flex-wrap gap-2">
+              <div className="mb-4 md:mb-6">
+                <h4 className="text-xs md:text-sm font-semibold text-warm-gray-700 mb-2 md:mb-3">Category Matches</h4>
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
                   {Object.entries(importMutation.data.category_matches).map(([category, count]) => (
                     <span
                       key={category}
-                      className="px-3 py-1.5 bg-primary-100 text-primary-700 rounded-lg text-sm font-medium"
+                      className="px-2.5 md:px-3 py-1 md:py-1.5 bg-primary-100 text-primary-700 rounded-lg text-xs md:text-sm font-medium"
                     >
                       {category}: {count}
                     </span>
@@ -274,11 +274,11 @@ const ExcelImport = () => {
             {/* Errors */}
             {importMutation.data.errors.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-red-700 mb-3">
+                <h4 className="text-xs md:text-sm font-semibold text-red-700 mb-2 md:mb-3">
                   Errors ({importMutation.data.errors.length})
                 </h4>
-                <div className="bg-red-50 rounded-xl p-4 max-h-48 overflow-y-auto">
-                  <ul className="space-y-1 text-sm text-red-700">
+                <div className="bg-red-50 rounded-xl p-3 md:p-4 max-h-48 overflow-y-auto">
+                  <ul className="space-y-1 text-xs md:text-sm text-red-700">
                     {importMutation.data.errors.slice(0, 10).map((error, idx) => (
                       <li key={idx}>• {error}</li>
                     ))}

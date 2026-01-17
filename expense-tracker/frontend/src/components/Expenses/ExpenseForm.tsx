@@ -145,23 +145,23 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-apple-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-warm-gray-800">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-2 md:p-4">
+      <div className="bg-white rounded-xl md:rounded-2xl shadow-apple-lg max-w-2xl w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 md:p-8">
+          <div className="flex justify-between items-center mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-warm-gray-800">
               {expenseId ? 'Edit Expense' : 'Add Expense'}
             </h2>
             <button
               onClick={onClose}
-              className="text-warm-gray-500 hover:text-warm-gray-700 text-2xl transition-colors"
+              className="text-warm-gray-500 hover:text-warm-gray-700 text-2xl md:text-3xl transition-colors"
             >
               ×
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
               <div>
                 <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Amount *
@@ -173,7 +173,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })
                   }
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all ${
+                  className={`w-full px-3 py-2.5 md:px-4 md:py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base ${
                     errors.amount ? 'border-red-400' : 'border-warm-gray-200'
                   }`}
                   required
@@ -190,7 +190,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 >
                   {CURRENCIES.map((curr) => (
                     <option key={curr.code} value={curr.code}>
@@ -210,7 +210,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all ${
+                  className={`w-full px-3 py-2.5 md:px-4 md:py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base ${
                     errors.description ? 'border-red-400' : 'border-warm-gray-200'
                   }`}
                   required
@@ -221,7 +221,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Category
                 </label>
                 <select
@@ -232,7 +232,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                       category_id: e.target.value || null,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 >
                   <option value="">Select category</option>
                   {categories?.map((cat) => (
@@ -244,20 +244,20 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Date *
                 </label>
                 <input
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Payment Method *
                 </label>
                 <select
@@ -265,8 +265,8 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, payment_method: e.target.value })
                   }
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 ${
-                    errors.payment_method ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-3 py-2.5 md:px-4 md:py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base ${
+                    errors.payment_method ? 'border-red-400' : 'border-warm-gray-200'
                   }`}
                   required
                 >
@@ -282,7 +282,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Location
                 </label>
                 <input
@@ -291,16 +291,16 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, location: e.target.value || null })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Tags
                 </label>
                 <div className="relative mb-2">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       value={tagInput}
@@ -312,19 +312,19 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                         }
                       }}
                       placeholder="Add tag..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                      className="flex-1 px-3 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                     />
                     <button
                       type="button"
                       onClick={handleTagAdd}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                      className="w-full sm:w-auto px-4 py-2.5 bg-primary-400 text-white rounded-xl hover:bg-primary-500 transition-colors text-sm md:text-base font-medium"
                     >
                       Add
                     </button>
                   </div>
                   {tagSuggestions && tagSuggestions.length > 0 && tagInput && (
-                    <div className="absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg p-2 max-h-40 overflow-y-auto">
-                      <div className="flex flex-wrap gap-1">
+                    <div className="absolute z-20 mt-1 w-full bg-white border-2 border-warm-gray-200 rounded-xl shadow-apple-lg p-2 max-h-40 overflow-y-auto">
+                      <div className="flex flex-wrap gap-1.5">
                         {tagSuggestions.slice(0, 5).map((tag) => (
                           <button
                             key={tag}
@@ -334,7 +334,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                               setTagInput(tag);
                               handleTagAdd();
                             }}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                            className="px-2.5 py-1 bg-beige-100 text-warm-gray-700 text-xs rounded-lg hover:bg-beige-200 transition-colors"
                           >
                             {tag}
                           </button>
@@ -365,7 +365,7 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Notes
                 </label>
                 <textarea
@@ -374,19 +374,19 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                     setFormData({ ...formData, notes: e.target.value || null })
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                   Receipt
                 </label>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileUpload}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
                 />
                 {formData.receipt_url && (
                   <p className="text-sm text-gray-600 mt-1">
@@ -405,25 +405,25 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                     }
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-warm-gray-700">
                     Recurring expense
                   </span>
                 </label>
               </div>
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                className="w-full sm:w-auto px-4 py-2.5 md:py-3 text-warm-gray-700 bg-beige-100 rounded-xl hover:bg-beige-200 transition-colors font-medium text-sm md:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 md:py-3 bg-primary-400 text-white rounded-xl hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm md:text-base shadow-apple hover:shadow-apple-lg"
               >
                 {createMutation.isPending || updateMutation.isPending
                   ? 'Saving...'

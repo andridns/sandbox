@@ -71,20 +71,21 @@ const Expenses = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-semibold text-warm-gray-800">Expenses</h2>
-        <div className="flex gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h2 className="text-2xl md:text-3xl font-semibold text-warm-gray-800">Expenses</h2>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             onClick={handleExport}
-            className="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-all shadow-apple hover:shadow-apple-lg font-medium flex items-center gap-2"
+            className="w-full sm:w-auto bg-green-500 text-white px-4 py-2.5 md:px-6 md:py-3 rounded-xl hover:bg-green-600 transition-all shadow-apple hover:shadow-apple-lg font-medium flex items-center justify-center gap-2 text-sm md:text-base"
           >
             <span>📥</span>
-            Export to Excel
+            <span className="hidden sm:inline">Export to Excel</span>
+            <span className="sm:hidden">Export</span>
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-primary-400 text-white px-6 py-3 rounded-xl hover:bg-primary-500 transition-all shadow-apple hover:shadow-apple-lg font-medium"
+            className="w-full sm:w-auto bg-primary-400 text-white px-4 py-2.5 md:px-6 md:py-3 rounded-xl hover:bg-primary-500 transition-all shadow-apple hover:shadow-apple-lg font-medium text-sm md:text-base"
           >
             + Add Expense
           </button>

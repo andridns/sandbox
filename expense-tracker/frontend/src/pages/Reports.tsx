@@ -66,33 +66,33 @@ const Reports = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-semibold text-warm-gray-800">Reports</h2>
-        <div className="flex gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h2 className="text-2xl md:text-3xl font-semibold text-warm-gray-800">Reports</h2>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => handleExport('csv')}
-            className="bg-warm-gray-600 text-white px-5 py-2.5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium"
+            className="flex-1 sm:flex-none bg-warm-gray-600 text-white px-4 py-2.5 md:px-5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium text-sm md:text-base"
           >
-            Export CSV
+            CSV
           </button>
           <button
             onClick={() => handleExport('excel')}
-            className="bg-warm-gray-600 text-white px-5 py-2.5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium"
+            className="flex-1 sm:flex-none bg-warm-gray-600 text-white px-4 py-2.5 md:px-5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium text-sm md:text-base"
           >
-            Export Excel
+            Excel
           </button>
           <button
             onClick={() => handleExport('pdf')}
-            className="bg-warm-gray-600 text-white px-5 py-2.5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium"
+            className="flex-1 sm:flex-none bg-warm-gray-600 text-white px-4 py-2.5 md:px-5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium text-sm md:text-base"
           >
-            Export PDF
+            PDF
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-apple">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-apple">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           <div>
             <label className="block text-sm font-medium text-warm-gray-700 mb-2">
               Start Date
@@ -101,7 +101,7 @@ const Reports = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
             />
           </div>
           <div>
@@ -112,7 +112,7 @@ const Reports = () => {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
             />
           </div>
           <div>
@@ -122,7 +122,7 @@ const Reports = () => {
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value as 'monthly' | 'yearly')}
-              className="w-full px-4 py-2.5 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
+              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
             >
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
