@@ -149,10 +149,18 @@ def get_current_user(
                 token = authorization_header.split("Bearer ")[1]
             else:
                 token = authorization_header
-            logger.debug("Using Authorization header token")
+            logger.info(f"Using Authorization header token (length: {len(token)})")
+        else:
+            logger.debug("No Authorization header found")
     
     if not token:
-        logger.warning(f"No authentication token found. Cookies: {list(request.cookies.keys())}, Origin: {request.headers.get('Origin')}")
+        auth_header_present = "Authorization" in request.headers
+        logger.warning(
+            f"No authentication token found. "
+            f"Cookies: {list(request.cookies.keys())}, "
+            f"Authorization header present: {auth_header_present}, "
+            f"Origin: {request.headers.get('Origin')}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",

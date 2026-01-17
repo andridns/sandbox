@@ -40,9 +40,9 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    # Serve static files
+    # Serve static files - SPA routing fallback
     location / {
-        try_files \$uri \$uri/ /index.html;
+        try_files \$uri /index.html;
     }
 
     # Cache static assets
@@ -101,7 +101,7 @@ server {
     index index.html;
 
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri /index.html;
     }
 }
 EOF

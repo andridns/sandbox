@@ -36,6 +36,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.debug('[API] Adding Bearer token to request');
+    } else if (!token) {
+      console.debug('[API] No token found in localStorage');
     }
     return config;
   },
@@ -50,6 +53,9 @@ api.interceptors.response.use(
     // If login response includes a token, store it
     if (response.data?.token) {
       localStorage.setItem(TOKEN_STORAGE_KEY, response.data.token);
+      console.debug('[API] Token stored in localStorage');
+    } else {
+      console.debug('[API] No token in response:', response.data);
     }
     return response;
   },
