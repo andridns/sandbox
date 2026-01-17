@@ -9,7 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Budgets from './pages/Budgets';
 import Reports from './pages/Reports';
-import Import from './pages/Import';
+import History from './pages/History';
 import Settings from './pages/Settings';
 
 const queryClient = new QueryClient({
@@ -69,11 +69,11 @@ function App() {
               }
             />
             <Route
-              path="/import"
+              path="/activity"
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <Import />
+                    <History />
                   </Layout>
                 </ProtectedRoute>
               }

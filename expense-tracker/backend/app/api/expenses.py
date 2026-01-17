@@ -5,9 +5,11 @@ from typing import Optional, List
 from datetime import date
 from uuid import UUID
 from decimal import Decimal
+import json
 
 from app.database import get_db
 from app.models.expense import Expense
+from app.models.history import ExpenseHistory
 from app.models.user import User
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.core.auth import get_current_user
@@ -85,6 +87,25 @@ async def create_expense(
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
+    
+    # Log history
+    history_entry = ExpenseHistory(
+        expense_id=db_expense.id,
+        action='create',
+        user_id=current_user.id,
+        username=current_user.username or current_user.email or 'unknown',
+        description=f"Created expense: {db_expense.description}",
+        new_data=json.dumps({
+            'id': str(db_expense.id),
+            'amount': float(db_expense.amount),
+            'currency': db_expense.currency,
+            'description': db_expense.description,
+            'date': db_expense.date.isoformat(),
+        }, default=str)
+    )
+    db.add(history_entry)
+    db.commit()
+    
     return db_expense
 
 
@@ -113,12 +134,44 @@ async def update_expense(
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     
+    # Store old data for history
+    old_data = {
+        'id': str(expense.id),
+        'amount': float(expense.amount),
+        'currency': expense.currency,
+        'description': expense.description,
+        'date': expense.date.isoformat(),
+    }
+    
     update_data = expense_update.model_dump(exclude_unset=True)
+    changed_fields = list(update_data.keys())
     for field, value in update_data.items():
         setattr(expense, field, value)
     
     db.commit()
     db.refresh(expense)
+    
+    # Log history
+    if changed_fields:
+        new_data = {
+            'id': str(expense.id),
+            'amount': float(expense.amount),
+            'currency': expense.currency,
+            'description': expense.description,
+            'date': expense.date.isoformat(),
+        }
+        history_entry = ExpenseHistory(
+            expense_id=expense.id,
+            action='update',
+            user_id=current_user.id,
+            username=current_user.username or current_user.email or 'unknown',
+            description=f"Updated expense: {expense.description} (changed: {', '.join(changed_fields)})",
+            old_data=json.dumps(old_data, default=str),
+            new_data=json.dumps(new_data, default=str)
+        )
+        db.add(history_entry)
+        db.commit()
+    
     return expense
 
 
@@ -132,6 +185,26 @@ async def delete_expense(
     expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
+    
+    # Store data for history before deletion
+    old_data = {
+        'id': str(expense.id),
+        'amount': float(expense.amount),
+        'currency': expense.currency,
+        'description': expense.description,
+        'date': expense.date.isoformat(),
+    }
+    
+    # Log history BEFORE deletion
+    history_entry = ExpenseHistory(
+        expense_id=expense.id,  # Keep reference even after deletion
+        action='delete',
+        user_id=current_user.id,
+        username=current_user.username or current_user.email or 'unknown',
+        description=f"Deleted expense: {expense.description}",
+        old_data=json.dumps(old_data, default=str)
+    )
+    db.add(history_entry)
     
     db.delete(expense)
     db.commit()

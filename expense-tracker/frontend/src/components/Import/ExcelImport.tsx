@@ -108,10 +108,7 @@ const ExcelImport = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl shadow-apple-lg p-4 md:p-8">
-      <h2 className="text-xl md:text-2xl font-semibold text-warm-gray-800 mb-4 md:mb-6">Import Expenses from Excel</h2>
-      
-      <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6">
         {/* File Upload Area */}
         <div
           onDragOver={handleDragOver}

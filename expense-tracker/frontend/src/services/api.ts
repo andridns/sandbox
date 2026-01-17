@@ -285,4 +285,24 @@ export const adminApi = {
   },
 };
 
+// History
+export interface ExpenseHistory {
+  id: string;
+  expense_id: string | null;
+  action: 'create' | 'update' | 'delete';
+  user_id: string;
+  username: string;
+  description: string | null;
+  old_data: string | null;
+  new_data: string | null;
+  created_at: string;
+}
+
+export const historyApi = {
+  getAll: async (params?: { skip?: number; limit?: number; action?: string; username?: string }): Promise<ExpenseHistory[]> => {
+    const response = await api.get<ExpenseHistory[]>('/history', { params });
+    return response.data;
+  },
+};
+
 export default api;

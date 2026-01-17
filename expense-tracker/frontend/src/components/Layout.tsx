@@ -27,7 +27,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/expenses', label: 'Explorer', icon: '🔍' },
     { path: '/budgets', label: 'Budgets', icon: '📈' },
     { path: '/reports', label: 'Reports', icon: '📊' },
-    { path: '/import', label: 'Import', icon: '📥' },
+    { path: '/activity', label: 'Activity', icon: '📋' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 

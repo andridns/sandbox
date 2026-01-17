@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { adminApi, exportApi } from '../services/api';
 import toast from 'react-hot-toast';
+import ExcelImport from '../components/Import/ExcelImport';
 
 const Settings = () => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -52,17 +53,23 @@ const Settings = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <h2 className="text-xl md:text-2xl font-bold text-warm-gray-800">Settings</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-primary-600">Settings</h2>
+
+      {/* Import Section */}
+      <div className="glass rounded-xl shadow-modern border border-modern-border/50 p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-semibold text-modern-text mb-3 md:mb-4">Import Data</h3>
+        <ExcelImport />
+      </div>
 
       {/* Export Section */}
-      <div className="bg-white rounded-xl shadow-apple p-4 md:p-6">
+      <div className="glass rounded-xl shadow-modern border border-modern-border/50 p-4 md:p-6">
         <h3 className="text-base md:text-lg font-semibold text-warm-gray-800 mb-3 md:mb-4">Export Data</h3>
         
-        <div className="border border-warm-gray-200 rounded-xl p-4 bg-warm-gray-50">
+        <div className="border border-modern-border/50 rounded-xl p-4 bg-modern-border/5">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h4 className="text-sm md:text-base font-semibold text-warm-gray-800 mb-2">Export Expenses to Excel</h4>
-              <p className="text-xs md:text-sm text-warm-gray-600 mb-4">
+              <h4 className="text-sm md:text-base font-semibold text-modern-text mb-2">Export Expenses to Excel</h4>
+              <p className="text-xs md:text-sm text-modern-text-light mb-4">
                 Download all your expenses as an Excel file (.xlsx) for backup or analysis.
               </p>
               
@@ -94,8 +101,8 @@ const Settings = () => {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-xl shadow-apple p-4 md:p-6">
-        <h3 className="text-base md:text-lg font-semibold text-warm-gray-800 mb-3 md:mb-4">Danger Zone</h3>
+      <div className="glass rounded-xl shadow-modern border border-modern-border/50 p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-semibold text-modern-text mb-3 md:mb-4">Danger Zone</h3>
         
         <div className="border border-red-200 rounded-xl p-4 bg-red-50">
           <div className="flex items-start justify-between">
