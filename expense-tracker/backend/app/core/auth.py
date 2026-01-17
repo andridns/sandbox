@@ -133,8 +133,12 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """Dependency to get current authenticated user"""
+    logger = logging.getLogger(__name__)
+    
     # Try to get token from cookie first (for web)
     token = request.cookies.get(SESSION_COOKIE_NAME)
+    logger.debug(f"Cookie received: {SESSION_COOKIE_NAME}={token is not None}")
+    logger.debug(f"All cookies: {list(request.cookies.keys())}")
     
     # If not in cookie, try Authorization header (for mobile/API)
     if not token:
@@ -145,8 +149,10 @@ def get_current_user(
                 token = authorization_header.split("Bearer ")[1]
             else:
                 token = authorization_header
+            logger.debug("Using Authorization header token")
     
     if not token:
+        logger.warning(f"No authentication token found. Cookies: {list(request.cookies.keys())}, Origin: {request.headers.get('Origin')}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -155,6 +161,7 @@ def get_current_user(
     
     user = get_current_user_from_token(token, db)
     if user is None:
+        logger.warning("Invalid token provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

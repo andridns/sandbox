@@ -87,13 +87,15 @@ async def login(
         # Use secure=True only in production (when HTTPS is available)
         # samesite="none" is required for cross-site requests (frontend and backend on different domains)
         is_prod = is_production_environment()
+        samesite_value = "none" if is_prod else "lax"
+        logger.info(f"Setting cookie: secure={is_prod}, samesite={samesite_value}, is_production={is_prod}")
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
             max_age=SESSION_EXPIRE_HOURS * 3600,  # Convert hours to seconds
             httponly=True,
             secure=is_prod,  # Set to True in production with HTTPS
-            samesite="none" if is_prod else "lax",  # "none" required for cross-site requests in production
+            samesite=samesite_value,  # "none" required for cross-site requests in production
             path="/"
         )
         
@@ -198,13 +200,17 @@ async def google_login(
         # Set secure cookie
         # samesite="none" is required for cross-site requests (frontend and backend on different domains)
         is_prod = is_production_environment()
+        samesite_value = "none" if is_prod else "lax"
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Setting cookie for Google login: secure={is_prod}, samesite={samesite_value}, is_production={is_prod}")
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
             max_age=SESSION_EXPIRE_HOURS * 3600,
             httponly=True,
             secure=is_prod,
-            samesite="none" if is_prod else "lax",  # "none" required for cross-site requests in production
+            samesite=samesite_value,  # "none" required for cross-site requests in production
             path="/"
         )
         
