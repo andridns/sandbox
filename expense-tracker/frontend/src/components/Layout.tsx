@@ -32,19 +32,21 @@ const Layout = ({ children }: LayoutProps) => {
   ];
 
   return (
-    <div className="min-h-screen bg-beige-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-gradient-subtle pb-20 md:pb-0">
       {/* Header */}
-      <header className="bg-white shadow-apple border-b border-warm-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-4 md:px-6 py-3 md:py-5">
+      <header className="glass shadow-modern sticky top-0 z-40 border-b border-modern-border/50">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-5">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl md:text-2xl font-semibold text-warm-gray-800">Expense Tracker</h1>
-            <div className="flex items-center gap-2 md:gap-4">
-              <span className="hidden sm:inline text-xs md:text-sm text-warm-gray-600">
+            <h1 className="text-xl md:text-2xl font-bold text-primary-600">
+              Expense Tracker
+            </h1>
+            <div className="flex items-center gap-3 md:gap-4">
+              <span className="hidden sm:inline text-xs md:text-sm text-modern-text-light font-medium">
                 Welcome, {user?.username}
               </span>
               <button
                 onClick={handleLogout}
-                className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-warm-gray-700 hover:text-primary-500 transition-colors"
+                className="px-4 md:px-5 py-2 text-xs md:text-sm text-modern-text-light hover:text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-200"
               >
                 Logout
               </button>
@@ -54,19 +56,22 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Desktop Navigation */}
-      <nav className="hidden md:block bg-white shadow-apple border-b border-warm-gray-200">
+      <nav className="hidden md:block glass shadow-modern border-b border-modern-border/50">
         <div className="container mx-auto px-6">
-          <div className="flex space-x-2 overflow-x-auto">
+          <div className="flex space-x-1 overflow-x-auto">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-5 py-4 text-sm font-medium transition-all duration-200 rounded-t-lg whitespace-nowrap ${
+                className={`px-5 py-4 text-sm font-semibold transition-all duration-200 rounded-t-xl whitespace-nowrap relative ${
                   location.pathname === item.path
-                    ? 'text-primary-500 border-b-2 border-primary-400 bg-beige-50'
-                    : 'text-warm-gray-600 hover:text-primary-500 hover:bg-beige-100'
+                    ? 'text-primary-600 bg-gradient-to-b from-primary-50 to-transparent'
+                    : 'text-modern-text-light hover:text-primary-600 hover:bg-primary-50/50'
                 }`}
               >
+                {location.pathname === item.path && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-primary rounded-full"></span>
+                )}
                 <span className="mr-2">{item.icon}</span>
                 {item.label}
               </Link>
@@ -76,20 +81,20 @@ const Layout = ({ children }: LayoutProps) => {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-apple-lg border-t border-warm-gray-200 z-50 safe-area-inset-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 glass shadow-modern-lg border-t border-modern-border/50 z-50 safe-area-inset-bottom">
         <div className="grid grid-cols-3 grid-rows-2 gap-1 px-2 py-2">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 min-h-[60px] ${
+              className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200 min-h-[60px] ${
                 location.pathname === item.path
-                  ? 'text-primary-500 bg-beige-50'
-                  : 'text-warm-gray-600 active:bg-beige-100'
+                  ? 'text-primary-600 bg-primary-50 shadow-modern'
+                  : 'text-modern-text-light active:bg-primary-50/50'
               }`}
             >
               <span className="text-2xl mb-1">{item.icon}</span>
-              <span className="text-[11px] font-medium text-center leading-tight">{item.label}</span>
+              <span className="text-[11px] font-semibold text-center leading-tight">{item.label}</span>
             </Link>
           ))}
         </div>

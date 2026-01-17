@@ -49,7 +49,7 @@ const Expenses = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <h2 className="text-2xl md:text-3xl font-semibold text-warm-gray-800">Expenses</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-primary-600">Expenses</h2>
 
       <ExpenseFilters 
         filters={filters} 

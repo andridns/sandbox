@@ -126,7 +126,7 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
   }, [localFilters, dateRangePreset]);
 
   return (
-    <div className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-warm-gray-100">
+    <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
       {/* Primary Filters - Most Important */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4">
         {/* Search */}

@@ -97,10 +97,10 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
 
   if (isLoading) {
     return (
-      <div className="bg-white p-4 md:p-8 rounded-2xl shadow-apple">
+      <div className="glass p-4 md:p-8 rounded-2xl shadow-modern border border-modern-border/50">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-beige-100 rounded-xl"></div>
+            <div key={i} className="h-20 bg-gradient-to-r from-modern-border/20 to-modern-border/10 rounded-xl"></div>
           ))}
         </div>
       </div>
@@ -109,35 +109,35 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
 
   if (expenses.length === 0) {
     return (
-      <div className="bg-white p-4 md:p-8 rounded-2xl shadow-apple text-center">
-        <p className="text-warm-gray-500 text-sm md:text-base">No expenses found</p>
+      <div className="glass p-4 md:p-8 rounded-2xl shadow-modern border border-modern-border/50 text-center">
+        <p className="text-modern-text-light text-sm md:text-base font-medium">No expenses found</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-apple-lg">
-      <div className="p-4 md:p-6 border-b border-warm-gray-200">
-        <h3 className="text-base md:text-lg font-semibold text-warm-gray-800">
+    <div className="glass rounded-2xl shadow-modern-lg border border-modern-border/50">
+      <div className="p-4 md:p-6 border-b border-modern-border/50">
+        <h3 className="text-base md:text-lg font-bold text-modern-text">
           {expenses.length} {expenses.length === 1 ? 'expense' : 'expenses'}
         </h3>
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden divide-y divide-warm-gray-200">
+      <div className="md:hidden divide-y divide-modern-border/30">
         {sortedExpenses.map((expense) => (
-          <div key={expense.id} className="p-4 hover:bg-beige-50 transition-colors">
+          <div key={expense.id} className="p-4 hover:bg-primary-50/30 transition-colors">
             <div className="flex justify-between items-start mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-warm-gray-800 text-sm">{expense.description}</span>
+                  <span className="font-semibold text-modern-text text-sm">{expense.description}</span>
                   {expense.is_recurring && (
-                    <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-lg">
+                    <span className="px-2 py-0.5 bg-gradient-accent/10 text-accent-600 text-xs rounded-lg font-medium border border-accent-200/50">
                       🔄
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-warm-gray-600">{formatDate(expense.date)}</div>
+                <div className="text-xs text-modern-text-light font-medium">{formatDate(expense.date)}</div>
               </div>
               <div className="text-right">
                 <CurrencyDisplay 
@@ -147,20 +147,20 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                 />
               </div>
             </div>
-            <div className="flex justify-between items-center mt-3 pt-3 border-t border-warm-gray-100">
-              <div className="text-xs text-warm-gray-600">
+            <div className="flex justify-between items-center mt-3 pt-3 border-t border-modern-border/20">
+              <div className="text-xs text-modern-text-light font-medium">
                 <span className="mr-3">{expense.payment_method}</span>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => onEdit(expense.id)}
-                  className="text-primary-500 hover:text-primary-600 font-medium transition-colors text-sm"
+                  className="text-primary-600 hover:text-primary-700 font-semibold transition-colors text-sm hover:underline"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => onDelete(expense.id)}
-                  className="text-red-500 hover:text-red-600 font-medium transition-colors text-sm"
+                  className="text-red-500 hover:text-red-600 font-semibold transition-colors text-sm hover:underline"
                 >
                   Delete
                 </button>
@@ -173,10 +173,10 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-beige-50">
+          <thead className="bg-gradient-to-r from-modern-border/10 to-transparent">
             <tr>
               <th 
-                className="px-5 py-4 text-left text-xs font-medium text-warm-gray-600 uppercase tracking-wider cursor-pointer hover:bg-beige-100 transition-colors select-none"
+                className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider cursor-pointer hover:bg-primary-50/30 transition-colors select-none"
                 onClick={() => handleSort('date')}
               >
                 <div className="flex items-center">
@@ -185,7 +185,7 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                 </div>
               </th>
               <th 
-                className="px-5 py-4 text-left text-xs font-medium text-warm-gray-600 uppercase tracking-wider cursor-pointer hover:bg-beige-100 transition-colors select-none"
+                className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider cursor-pointer hover:bg-primary-50/30 transition-colors select-none"
                 onClick={() => handleSort('description')}
               >
                 <div className="flex items-center">
@@ -194,7 +194,7 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                 </div>
               </th>
               <th 
-                className="px-5 py-4 text-left text-xs font-medium text-warm-gray-600 uppercase tracking-wider cursor-pointer hover:bg-beige-100 transition-colors select-none"
+                className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider cursor-pointer hover:bg-primary-50/30 transition-colors select-none"
                 onClick={() => handleSort('amount')}
               >
                 <div className="flex items-center">
@@ -203,7 +203,7 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                 </div>
               </th>
               <th 
-                className="px-5 py-4 text-left text-xs font-medium text-warm-gray-600 uppercase tracking-wider cursor-pointer hover:bg-beige-100 transition-colors select-none"
+                className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider cursor-pointer hover:bg-primary-50/30 transition-colors select-none"
                 onClick={() => handleSort('category')}
               >
                 <div className="flex items-center">
@@ -212,7 +212,7 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                 </div>
               </th>
               <th 
-                className="px-5 py-4 text-left text-xs font-medium text-warm-gray-600 uppercase tracking-wider cursor-pointer hover:bg-beige-100 transition-colors select-none"
+                className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider cursor-pointer hover:bg-primary-50/30 transition-colors select-none"
                 onClick={() => handleSort('payment')}
               >
                 <div className="flex items-center">
@@ -220,47 +220,47 @@ const ExpenseList = ({ expenses, isLoading, onEdit, onDelete }: ExpenseListProps
                   {getSortIcon('payment')}
                 </div>
               </th>
-              <th className="px-5 py-4 text-left text-xs font-medium text-warm-gray-600 uppercase tracking-wider">
+              <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-warm-gray-200">
+          <tbody className="divide-y divide-modern-border/30">
             {sortedExpenses.map((expense) => (
-              <tr key={expense.id} className="hover:bg-beige-50 transition-colors">
-                <td className="px-5 py-4 text-sm text-warm-gray-800">
+              <tr key={expense.id} className="hover:bg-primary-50/20 transition-colors">
+                <td className="px-5 py-4 text-sm text-modern-text font-medium">
                   {formatDate(expense.date)}
                 </td>
-                <td className="px-5 py-4 text-sm text-warm-gray-800">
+                <td className="px-5 py-4 text-sm text-modern-text font-semibold">
                   <div className="flex items-center gap-2">
                     {expense.description}
                     {expense.is_recurring && (
-                      <span className="px-2.5 py-1 bg-primary-100 text-primary-700 text-xs rounded-lg">
+                      <span className="px-2.5 py-1 bg-gradient-accent/10 text-accent-600 text-xs rounded-lg font-medium border border-accent-200/50">
                         🔄
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="px-5 py-4 text-sm font-semibold text-warm-gray-800">
+                <td className="px-5 py-4 text-sm font-bold text-modern-text">
                   <CurrencyDisplay 
                     amount={expense.amount} 
                     currency={expense.currency}
                     size="sm"
                   />
                 </td>
-                <td className="px-5 py-4 text-sm text-warm-gray-600">-</td>
-                <td className="px-5 py-4 text-sm text-warm-gray-600">{expense.payment_method}</td>
+                <td className="px-5 py-4 text-sm text-modern-text-light font-medium">-</td>
+                <td className="px-5 py-4 text-sm text-modern-text-light font-medium">{expense.payment_method}</td>
                 <td className="px-5 py-4 text-sm">
                   <div className="flex gap-3">
                     <button
                       onClick={() => onEdit(expense.id)}
-                      className="text-primary-500 hover:text-primary-600 font-medium transition-colors"
+                      className="text-primary-600 hover:text-primary-700 font-semibold transition-colors hover:underline"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => onDelete(expense.id)}
-                      className="text-red-500 hover:text-red-600 font-medium transition-colors"
+                      className="text-red-500 hover:text-red-600 font-semibold transition-colors hover:underline"
                     >
                       Delete
                     </button>
