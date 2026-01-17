@@ -32,7 +32,7 @@ const parseExpenseInput = (input: string): { amount: number | null; description:
 const QuickExpenseForm = () => {
   const [input, setInput] = useState('');
   const [currency, setCurrency] = useState('IDR');
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(true);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +53,7 @@ const QuickExpenseForm = () => {
       setCategoryId(null);
       setPaymentMethod('Cash');
       setCurrency('IDR');
-      setShowAdvanced(false);
+      setShowAdvanced(true);
       toast.success('Expense added!');
       inputRef.current?.focus();
     },
@@ -90,7 +90,7 @@ const QuickExpenseForm = () => {
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl shadow-apple-lg p-8 max-w-3xl mx-auto">
+    <div className="bg-white rounded-2xl shadow-apple-lg p-4 md:p-8 max-w-3xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="quick-input" className="block text-sm font-medium text-warm-gray-600 mb-4">
@@ -98,13 +98,13 @@ const QuickExpenseForm = () => {
           </label>
           
           {/* Currency Selection Buttons */}
-          <div className="flex gap-3 mb-5 flex-wrap">
+          <div className="flex gap-2 md:gap-3 mb-5 flex-wrap">
             {CURRENCIES.map((curr) => (
               <button
                 key={curr.code}
                 type="button"
                 onClick={() => setCurrency(curr.code)}
-                className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${
                   currency === curr.code
                     ? 'bg-primary-400 text-white shadow-apple'
                     : 'bg-beige-100 text-warm-gray-700 hover:bg-beige-200 hover:text-primary-500'
@@ -115,7 +115,7 @@ const QuickExpenseForm = () => {
             ))}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col md:flex-row gap-3">
             <input
               ref={inputRef}
               id="quick-input"
@@ -123,19 +123,19 @@ const QuickExpenseForm = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="e.g., 100000 lunch or 200.000 coffee"
-              className="flex-1 px-6 py-4 text-xl border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 placeholder-warm-gray-400 transition-all"
+              className="flex-1 px-4 py-3 md:px-6 md:py-4 text-base md:text-xl border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 placeholder-warm-gray-400 transition-all"
               autoFocus
             />
             <button
               type="submit"
               disabled={!canSubmit || createMutation.isPending}
-              className="px-8 py-4 bg-primary-400 text-white rounded-xl hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transition-all duration-200 shadow-apple hover:shadow-apple-lg"
+              className="w-full md:w-auto px-6 py-3 md:px-8 md:py-4 bg-primary-400 text-white rounded-xl hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base md:text-lg transition-all duration-200 shadow-apple hover:shadow-apple-lg"
             >
               {createMutation.isPending ? 'Adding...' : 'Add'}
             </button>
           </div>
           {parsed.amount && (
-            <div className="mt-3 text-base text-warm-gray-600">
+            <div className="mt-3 text-sm md:text-base text-warm-gray-600">
               <span className="font-semibold text-warm-gray-800">{formatCurrency(parsed.amount, currency)}</span>
               {parsed.description && <span className="ml-2">• {parsed.description}</span>}
             </div>
