@@ -116,14 +116,20 @@ const QuickExpenseForm = () => {
     };
   }, [showOtherCurrencies]);
 
-  // Check if current currency is from OTHER_CURRENCIES
-  const isOtherCurrency = OTHER_CURRENCIES.some(curr => curr.code === currency);
+  // Check if current currency is not IDR, JPY, or USD
+  const isOtherCurrency = !['IDR', 'JPY', 'USD'].includes(currency);
   
   // Get current currency display info
   const getCurrentCurrencyInfo = () => {
-    const mainCurrency = CURRENCIES.find(c => c.code === currency);
-    if (mainCurrency) return mainCurrency;
-    return OTHER_CURRENCIES.find(c => c.code === currency);
+    const allCurrencies = [...CURRENCIES, ...OTHER_CURRENCIES];
+    return allCurrencies.find(c => c.code === currency);
+  };
+
+  // Get all currencies except IDR, JPY, USD for the "Other" dropdown, sorted alphabetically
+  const getOtherCurrencies = () => {
+    const mainCurrencies = CURRENCIES.filter(c => !['IDR', 'JPY', 'USD'].includes(c.code));
+    const allOtherCurrencies = [...mainCurrencies, ...OTHER_CURRENCIES];
+    return allOtherCurrencies.sort((a, b) => a.code.localeCompare(b.code));
   };
 
   const handleOtherCurrencySelect = (selectedCurrency: string) => {
@@ -132,72 +138,121 @@ const QuickExpenseForm = () => {
   };
 
   return (
-    <div className="glass rounded-2xl shadow-modern-lg border border-modern-border/50 p-4 md:p-8 max-w-3xl mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="glass rounded-2xl shadow-modern-lg border border-modern-border/50 p-3 md:p-4 max-w-3xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label htmlFor="quick-input" className="block text-sm font-semibold text-modern-text-light mb-4 uppercase tracking-wide">
-            Quick Add Expense
-          </label>
-          
-          {/* Currency Selection Buttons */}
-          <div className="flex gap-2 md:gap-3 mb-5 flex-wrap relative">
-            {CURRENCIES.map((curr) => (
-              <button
-                key={curr.code}
-                type="button"
-                onClick={() => setCurrency(curr.code)}
-                className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
-                  currency === curr.code && !isOtherCurrency
-                    ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
-                    : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
-                }`}
-              >
-                {curr.code} {curr.symbol}
-              </button>
-            ))}
-            
-            {/* Other Currencies Button */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setShowOtherCurrencies(!showOtherCurrencies)}
-                className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
-                  isOtherCurrency
-                    ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
-                    : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
-                }`}
-              >
-                {isOtherCurrency 
-                  ? `${getCurrentCurrencyInfo()?.code} ${getCurrentCurrencyInfo()?.symbol}`
-                  : 'Other currencies ▼'
-                }
-              </button>
-              
-              {/* Dropdown */}
-              {showOtherCurrencies && (
-                <div className="absolute top-full left-0 mt-2 bg-white border-2 border-modern-border/50 rounded-xl shadow-modern-lg z-50 max-h-64 overflow-y-auto min-w-[200px]">
-                  <div className="p-2">
-                    {OTHER_CURRENCIES.map((curr) => (
-                      <button
-                        key={curr.code}
-                        type="button"
-                        onClick={() => handleOtherCurrencySelect(curr.code)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          currency === curr.code
-                            ? 'bg-primary-100 text-primary-700'
-                            : 'text-modern-text hover:bg-primary-50'
-                        }`}
-                      >
-                        <span className="font-semibold">{curr.code}</span> {curr.symbol} - {curr.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* Category Selection Buttons */}
+          <div className="mb-3">
+            <label className="block text-xs md:text-sm font-medium text-warm-gray-700 mb-2">
+              Category
+            </label>
+            <div className="flex gap-1.5 md:gap-2 flex-wrap">
+              {categories?.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategoryId(cat.id)}
+                  className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 flex items-center gap-1 ${
+                    categoryId === cat.id
+                      ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                      : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                  }`}
+                >
+                  <span>{cat.icon || '📁'}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-3">
+          {/* Currency Selection Buttons */}
+          <div className="mb-3">
+            <label className="block text-xs md:text-sm font-medium text-warm-gray-700 mb-2">
+              Currency
+            </label>
+            <div className="flex gap-1.5 md:gap-2 flex-wrap relative">
+              {/* IDR Button */}
+              <button
+                type="button"
+                onClick={() => setCurrency('IDR')}
+                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+                  currency === 'IDR'
+                    ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                    : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                }`}
+              >
+                IDR Rp
+              </button>
+              
+              {/* JPY Button */}
+              <button
+                type="button"
+                onClick={() => setCurrency('JPY')}
+                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+                  currency === 'JPY'
+                    ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                    : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                }`}
+              >
+                JPY ¥
+              </button>
+              
+              {/* USD Button */}
+              <button
+                type="button"
+                onClick={() => setCurrency('USD')}
+                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+                  currency === 'USD'
+                    ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                    : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                }`}
+              >
+                USD $
+              </button>
+            
+              {/* Other Currencies Button */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowOtherCurrencies(!showOtherCurrencies)}
+                  className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+                    isOtherCurrency
+                      ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                      : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                  }`}
+                >
+                  {isOtherCurrency 
+                    ? `${getCurrentCurrencyInfo()?.code} ${getCurrentCurrencyInfo()?.symbol}`
+                    : 'Other ▼'
+                  }
+                </button>
+                
+                {/* Dropdown */}
+                {showOtherCurrencies && (
+                  <div className="absolute top-full left-0 mt-2 bg-white border-2 border-modern-border/50 rounded-xl shadow-modern-lg z-50 max-h-64 overflow-y-auto min-w-[200px]">
+                    <div className="p-2">
+                      {getOtherCurrencies().map((curr) => (
+                        <button
+                          key={curr.code}
+                          type="button"
+                          onClick={() => handleOtherCurrencySelect(curr.code)}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            currency === curr.code
+                              ? 'bg-primary-100 text-primary-700'
+                              : 'text-modern-text hover:bg-primary-50'
+                          }`}
+                        >
+                          <span className="font-semibold">{curr.code}</span> {curr.symbol} - {curr.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-2">
             <input
               ref={inputRef}
               id="quick-input"
@@ -205,43 +260,24 @@ const QuickExpenseForm = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="e.g., 100000 lunch or 200.000 coffee"
-              className="flex-1 px-4 py-3 md:px-6 md:py-4 text-base md:text-xl border-2 border-modern-border/50 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-modern-text placeholder-modern-text-light transition-all shadow-modern"
+              className="flex-1 px-3 py-2 md:px-4 md:py-3 text-base md:text-lg border-2 border-modern-border/50 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-modern-text placeholder-modern-text-light transition-all shadow-modern"
               autoFocus
             />
             <button
               type="submit"
               disabled={!canSubmit || createMutation.isPending}
-              className="w-full md:w-auto px-6 py-3 md:px-8 md:py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 hover:shadow-modern-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-base md:text-lg transition-all duration-200 shadow-modern hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full md:w-auto px-4 py-2 md:px-6 md:py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 hover:shadow-modern-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base transition-all duration-200 shadow-modern hover:scale-[1.02] active:scale-[0.98]"
             >
               {createMutation.isPending ? 'Adding...' : 'Add'}
             </button>
           </div>
           {parsed.amount && (
-            <div className="mt-3 text-sm md:text-base text-modern-text-light">
+            <div className="mt-2 text-xs md:text-sm text-modern-text-light">
               <span className="font-bold text-modern-text">{formatCurrency(parsed.amount, currency)}</span>
               {parsed.description && <span className="ml-2 font-medium">• {parsed.description}</span>}
             </div>
           )}
         </div>
-
-        <div className="pt-5 border-t border-warm-gray-200">
-            <div>
-              <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={categoryId || ''}
-                onChange={(e) => setCategoryId(e.target.value || null)}
-                className="w-full px-4 py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all"
-              >
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
       </form>
     </div>
   );

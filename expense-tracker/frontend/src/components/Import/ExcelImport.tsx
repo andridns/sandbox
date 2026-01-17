@@ -290,7 +290,6 @@ const ExcelImport = () => {
             )}
           </div>
         )}
-      </div>
     </div>
   );
 };

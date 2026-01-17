@@ -235,27 +235,6 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-                  Category
-                </label>
-                <select
-                  value={formData.category_id || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      category_id: e.target.value || null,
-                    })
-                  }
-                  className="w-full px-3 py-2.5 md:px-4 md:py-3 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
-                >
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-warm-gray-700 mb-2">
@@ -399,6 +378,35 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
                     Recurring expense
                   </span>
                 </label>
+              </div>
+            </div>
+
+            {/* Category Selection Buttons */}
+            <div className="pt-4 pb-2 border-t border-warm-gray-200">
+              <label className="block text-sm font-medium text-warm-gray-700 mb-3">
+                Category
+              </label>
+              <div className="flex gap-2 md:gap-3 flex-wrap">
+                {categories?.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        category_id: cat.id,
+                      })
+                    }
+                    className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 flex items-center gap-1.5 ${
+                      formData.category_id === cat.id
+                        ? 'bg-primary-600 text-white shadow-apple hover:bg-primary-700 hover:shadow-apple-lg'
+                        : 'bg-warm-gray-100 text-warm-gray-700 hover:bg-primary-50 hover:text-primary-600 border border-warm-gray-200'
+                    }`}
+                  >
+                    <span>{cat.icon || '📁'}</span>
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
