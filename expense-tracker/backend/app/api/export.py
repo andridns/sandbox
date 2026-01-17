@@ -14,6 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 from app.database import get_db
 from app.models.expense import Expense
+from app.models.category import Category
 from app.models.user import User
 from app.core.auth import get_current_user
 
@@ -88,24 +89,30 @@ async def export_excel(
     expenses = query.order_by(Expense.date.desc()).all()
     
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Expenses"
     
-    # Header
-    headers = [
-        "Date", "Amount", "Currency", "Description", "Category",
+    # Remove default sheet and create our sheets
+    if "Sheet" in wb.sheetnames:
+        wb.remove(wb["Sheet"])
+    
+    # Create Expenses sheet
+    ws_expenses = wb.create_sheet("Expenses")
+    
+    # Expenses header
+    expense_headers = [
+        "ID", "Date", "Amount", "Currency", "Description", "Category",
         "Payment Method", "Tags", "Location", "Recurring", "Notes"
     ]
-    ws.append(headers)
+    ws_expenses.append(expense_headers)
     
-    # Style header
-    for cell in ws[1]:
+    # Style expenses header
+    for cell in ws_expenses[1]:
         cell.font = Font(bold=True)
         cell.alignment = Alignment(horizontal="center")
     
-    # Data rows
+    # Expenses data rows
     for expense in expenses:
-        ws.append([
+        ws_expenses.append([
+            str(expense.id),
             expense.date.isoformat(),
             float(expense.amount),
             expense.currency,
@@ -118,8 +125,8 @@ async def export_excel(
             expense.notes or ""
         ])
     
-    # Auto-adjust column widths
-    for column in ws.columns:
+    # Auto-adjust expenses column widths
+    for column in ws_expenses.columns:
         max_length = 0
         column_letter = column[0].column_letter
         for cell in column:
@@ -129,7 +136,45 @@ async def export_excel(
             except:
                 pass
         adjusted_width = min(max_length + 2, 50)
-        ws.column_dimensions[column_letter].width = adjusted_width
+        ws_expenses.column_dimensions[column_letter].width = adjusted_width
+    
+    # Create Categories sheet
+    categories = db.query(Category).order_by(Category.is_default.desc(), Category.name).all()
+    ws_categories = wb.create_sheet("Categories")
+    
+    # Categories header
+    category_headers = [
+        "ID", "Name", "Icon", "Color", "Is Default"
+    ]
+    ws_categories.append(category_headers)
+    
+    # Style categories header
+    for cell in ws_categories[1]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Categories data rows
+    for category in categories:
+        ws_categories.append([
+            str(category.id),
+            category.name,
+            category.icon or "",
+            category.color,
+            "Yes" if category.is_default else "No"
+        ])
+    
+    # Auto-adjust categories column widths
+    for column in ws_categories.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws_categories.column_dimensions[column_letter].width = adjusted_width
     
     output = io.BytesIO()
     wb.save(output)

@@ -13,9 +13,13 @@ from app.models.user import User
 from app.services.excel_import import ExcelImportService
 from app.services.category_matcher import CategoryMatcher
 from app.schemas.expense import ExpenseCreate
+from app.schemas.category import CategoryCreate
 from app.core.auth import get_current_user
 from decimal import Decimal
 from datetime import date, datetime
+from openpyxl import load_workbook
+import io
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +76,103 @@ async def import_excel(
                 detail=error_msg
             )
         
-        # Parse Excel file
-        logger.info("Parsing Excel file")
+        # Load workbook to check for Categories sheet
+        logger.info("Loading workbook to check for Categories sheet")
+        workbook = load_workbook(io.BytesIO(contents), data_only=True)
+        
+        # Import categories if Categories sheet exists
+        categories_imported = 0
+        category_id_map = {}  # Map old IDs to new IDs
+        if "Categories" in workbook.sheetnames:
+            logger.info("Found Categories sheet, importing categories")
+            ws_categories = workbook["Categories"]
+            
+            # Find header row
+            header_row = None
+            for row_idx in range(1, min(11, ws_categories.max_row + 1)):
+                row = ws_categories[row_idx]
+                headers = [str(cell.value).strip().lower() if cell.value else "" for cell in row]
+                if "name" in headers or "id" in headers:
+                    header_row = row_idx
+                    break
+            
+            if header_row:
+                # Map column indices
+                col_map = {}
+                header_cells = ws_categories[header_row]
+                for idx, cell in enumerate(header_cells, start=1):
+                    if cell.value:
+                        header_name = str(cell.value).strip().lower()
+                        col_map[header_name] = idx
+                
+                # Process category rows
+                for row_idx in range(header_row + 1, ws_categories.max_row + 1):
+                    row = ws_categories[row_idx]
+                    if not any(cell.value for cell in row):
+                        continue
+                    
+                    try:
+                        old_id = None
+                        name = None
+                        icon = None
+                        color = "#4CAF50"
+                        is_default = False
+                        
+                        if "id" in col_map:
+                            id_cell = row[col_map["id"] - 1]
+                            if id_cell.value:
+                                old_id = str(id_cell.value).strip()
+                        
+                        if "name" in col_map:
+                            name_cell = row[col_map["name"] - 1]
+                            if name_cell.value:
+                                name = str(name_cell.value).strip()
+                        
+                        if "icon" in col_map:
+                            icon_cell = row[col_map["icon"] - 1]
+                            if icon_cell.value:
+                                icon = str(icon_cell.value).strip() or None
+                        
+                        if "color" in col_map:
+                            color_cell = row[col_map["color"] - 1]
+                            if color_cell.value:
+                                color = str(color_cell.value).strip()
+                        
+                        if "is default" in col_map:
+                            default_cell = row[col_map["is default"] - 1]
+                            if default_cell.value:
+                                is_default = str(default_cell.value).strip().lower() in ["yes", "true", "1"]
+                        
+                        if name:
+                            # Check if category already exists
+                            existing = db.query(Category).filter(Category.name == name).first()
+                            if existing:
+                                if old_id:
+                                    category_id_map[old_id] = existing.id
+                                logger.debug(f"Category '{name}' already exists, skipping")
+                            else:
+                                # Create new category
+                                new_category = Category(
+                                    name=name,
+                                    icon=icon,
+                                    color=color,
+                                    is_default=is_default
+                                )
+                                db.add(new_category)
+                                db.commit()
+                                db.refresh(new_category)
+                                
+                                if old_id:
+                                    category_id_map[old_id] = new_category.id
+                                
+                                categories_imported += 1
+                                logger.info(f"Imported category: {name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to import category from row {row_idx}: {e}")
+                        continue
+        
+        # Parse Excel file for expenses
+        logger.info("Parsing Excel file for expenses")
         import_service = ExcelImportService(contents)
         expenses_data, parse_errors = import_service.parse()
         logger.info(f"Excel parsing complete. Found {len(expenses_data)} valid rows, {len(parse_errors)} parse errors")
@@ -81,7 +180,7 @@ async def import_excel(
         if parse_errors:
             logger.warning(f"Parse errors encountered: {parse_errors[:5]}")  # Log first 5 errors
         
-        if not expenses_data and not parse_errors:
+        if not expenses_data and not parse_errors and categories_imported == 0:
             error_msg = "No data found in Excel file"
             logger.error(error_msg)
             raise HTTPException(
@@ -141,6 +240,19 @@ async def import_excel(
                 logger.debug(f"Row {idx + 1}: Processing expense - Amount: {amount}, Description: {expense_data.get('description', 'N/A')[:50]}")
                 matched_category = None
                 
+                # Check if expense has a category ID from the export (if ID column exists)
+                expense_category_id = None
+                if 'id' in expense_data and expense_data.get('id'):
+                    # Try to find expense by ID to get its category_id
+                    try:
+                        expense_id = UUID(str(expense_data['id']))
+                        existing_expense = db.query(Expense).filter(Expense.id == expense_id).first()
+                        if existing_expense and existing_expense.category_id:
+                            expense_category_id = existing_expense.category_id
+                            logger.debug(f"Row {idx + 1}: Found existing expense with category_id: {expense_category_id}")
+                    except (ValueError, TypeError):
+                        pass
+                
                 # First, try to match Type column to category
                 if 'category' in expense_data and expense_data['category']:
                     type_value = str(expense_data['category']).strip().lower()
@@ -162,6 +274,20 @@ async def import_excel(
                                 matched_category = category
                                 logger.info(f"Row {idx + 1}: Matched category via fuzzy match: {matched_category.name}")
                                 break
+                
+                # If we found a category_id from existing expense, use it (mapped if needed)
+                if expense_category_id and not matched_category:
+                    # Check if this ID was mapped during category import
+                    mapped_id = category_id_map.get(str(expense_category_id))
+                    if mapped_id:
+                        matched_category = db.query(Category).filter(Category.id == mapped_id).first()
+                        if matched_category:
+                            logger.info(f"Row {idx + 1}: Using mapped category from import: {matched_category.name}")
+                    else:
+                        # Try to find category by original ID
+                        matched_category = db.query(Category).filter(Category.id == expense_category_id).first()
+                        if matched_category:
+                            logger.info(f"Row {idx + 1}: Using category from expense ID: {matched_category.name}")
                 
                 # If no match from Type column, use smart category matching on description
                 if not matched_category:
@@ -234,6 +360,7 @@ async def import_excel(
             "failed": len(failed_rows) + len(parse_errors),
             "uncategorized": uncategorized_count,
             "skipped": skipped_count,
+            "categories_imported": categories_imported,
         }
         
         logger.info(f"Import complete. Summary: {summary}")

@@ -20,6 +20,7 @@ class ExcelImportService:
     
     # Common column name mappings (case-insensitive)
     COLUMN_MAPPINGS = {
+        'id': ['id', 'uuid', 'expense_id'],
         'date': ['date', 'tanggal', 'transaction date', 'expense date', 'timestamp'],
         'amount': ['amount', 'jumlah', 'total', 'price', 'harga', 'value'],
         'description': ['description', 'deskripsi', 'note', 'notes', 'detail', 'item', 'merchant', 'store'],

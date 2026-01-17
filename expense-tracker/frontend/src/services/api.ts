@@ -191,6 +191,7 @@ export interface ImportResult {
     imported: number;
     failed: number;
     uncategorized: number;
+    categories_imported?: number;
   };
   category_matches: Record<string, number>;
   errors: string[];

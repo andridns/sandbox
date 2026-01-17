@@ -15,10 +15,11 @@ const ExcelImport = () => {
       const { summary, errors } = result;
       
       // Show success message
-      toast.success(
-        `Successfully imported ${summary.imported} of ${summary.total_rows} expenses!`,
-        { duration: 5000 }
-      );
+      let successMsg = `Successfully imported ${summary.imported} of ${summary.total_rows} expenses!`;
+      if (summary.categories_imported && summary.categories_imported > 0) {
+        successMsg += ` ${summary.categories_imported} categories imported.`;
+      }
+      toast.success(successMsg, { duration: 5000 });
       
       // Show warnings if any
       if (summary.uncategorized > 0) {
@@ -36,6 +37,7 @@ const ExcelImport = () => {
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
       queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
       
@@ -192,6 +194,10 @@ const ExcelImport = () => {
             </li>
             <li className="flex items-start">
               <span className="mr-2">✓</span>
+              <span><strong>Categories sheet:</strong> If your Excel file has a "Categories" sheet, categories will be imported automatically</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">✓</span>
               <span><strong>Date formats:</strong> YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, or Excel date serial numbers</span>
             </li>
           </ul>
@@ -213,7 +219,7 @@ const ExcelImport = () => {
           <div className="mt-6 border-t border-warm-gray-200 pt-6">
             <h3 className="text-lg font-semibold text-warm-gray-800 mb-4">Import Results</h3>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className={`grid grid-cols-2 gap-4 mb-6 ${importMutation.data.summary.categories_imported !== undefined ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
               <div className="bg-beige-50 rounded-xl p-4">
                 <p className="text-sm text-warm-gray-600">Total Rows</p>
                 <p className="text-2xl font-bold text-warm-gray-800">
@@ -238,6 +244,14 @@ const ExcelImport = () => {
                   {importMutation.data.summary.uncategorized}
                 </p>
               </div>
+              {importMutation.data.summary.categories_imported !== undefined && (
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <p className="text-sm text-warm-gray-600">Categories</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {importMutation.data.summary.categories_imported}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Category Matches */}
