@@ -141,28 +141,33 @@ const QuickExpenseForm = () => {
     <div className="glass rounded-2xl shadow-modern-lg border border-modern-border/50 p-3 md:p-4 max-w-3xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          {/* Category Selection Buttons */}
+          {/* Text Input & Add Button */}
           <div className="mb-3">
-            <label className="block text-xs md:text-sm font-medium text-warm-gray-700 mb-2">
-              Category
-            </label>
-            <div className="flex gap-1.5 md:gap-2 flex-wrap">
-              {categories?.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setCategoryId(cat.id)}
-                  className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 flex items-center gap-1 ${
-                    categoryId === cat.id
-                      ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
-                      : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
-                  }`}
-                >
-                  <span>{cat.icon || '📁'}</span>
-                  <span>{cat.name}</span>
-                </button>
-              ))}
+            <div className="flex flex-col md:flex-row gap-2">
+              <input
+                ref={inputRef}
+                id="quick-input"
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="e.g., 100000 lunch or 200.000 coffee"
+                className="flex-1 px-3 py-2 md:px-4 md:py-3 text-base md:text-lg border-2 border-modern-border/50 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-modern-text placeholder-modern-text-light transition-all shadow-modern"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={!canSubmit || createMutation.isPending}
+                className="w-full md:w-auto px-4 py-2 md:px-6 md:py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 hover:shadow-modern-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base transition-all duration-200 shadow-modern hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {createMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
             </div>
+            {parsed.amount && (
+              <div className="mt-2 text-xs md:text-sm text-modern-text-light">
+                <span className="font-bold text-modern-text">{formatCurrency(parsed.amount, currency)}</span>
+                {parsed.description && <span className="ml-2 font-medium">• {parsed.description}</span>}
+              </div>
+            )}
           </div>
 
           {/* Currency Selection Buttons */}
@@ -252,31 +257,29 @@ const QuickExpenseForm = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-2">
-            <input
-              ref={inputRef}
-              id="quick-input"
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g., 100000 lunch or 200.000 coffee"
-              className="flex-1 px-3 py-2 md:px-4 md:py-3 text-base md:text-lg border-2 border-modern-border/50 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-modern-text placeholder-modern-text-light transition-all shadow-modern"
-              autoFocus
-            />
-            <button
-              type="submit"
-              disabled={!canSubmit || createMutation.isPending}
-              className="w-full md:w-auto px-4 py-2 md:px-6 md:py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 hover:shadow-modern-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base transition-all duration-200 shadow-modern hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {createMutation.isPending ? 'Adding...' : 'Add'}
-            </button>
-          </div>
-          {parsed.amount && (
-            <div className="mt-2 text-xs md:text-sm text-modern-text-light">
-              <span className="font-bold text-modern-text">{formatCurrency(parsed.amount, currency)}</span>
-              {parsed.description && <span className="ml-2 font-medium">• {parsed.description}</span>}
+          {/* Category Selection Buttons */}
+          <div className="mb-3">
+            <label className="block text-xs md:text-sm font-medium text-warm-gray-700 mb-2">
+              Category
+            </label>
+            <div className="flex gap-1.5 md:gap-2 flex-wrap">
+              {categories?.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategoryId(cat.id)}
+                  className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 flex items-center gap-1 ${
+                    categoryId === cat.id
+                      ? 'bg-primary-600 text-white shadow-modern hover:bg-primary-700 hover:shadow-modern-lg'
+                      : 'bg-modern-border/10 text-modern-text-light hover:bg-primary-50 hover:text-primary-600 border border-modern-border/30'
+                  }`}
+                >
+                  <span>{cat.icon || '📁'}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </form>
     </div>
