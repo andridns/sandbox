@@ -32,7 +32,6 @@ const parseExpenseInput = (input: string): { amount: number | null; description:
 const QuickExpenseForm = () => {
   const [input, setInput] = useState('');
   const [currency, setCurrency] = useState('IDR');
-  const [showAdvanced, setShowAdvanced] = useState(true);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +52,6 @@ const QuickExpenseForm = () => {
       setCategoryId(null);
       setPaymentMethod('Cash');
       setCurrency('IDR');
-      setShowAdvanced(true);
       toast.success('Expense added!');
       inputRef.current?.focus();
     },
@@ -142,16 +140,7 @@ const QuickExpenseForm = () => {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-sm text-primary-500 hover:text-primary-600 font-medium transition-colors"
-        >
-          {showAdvanced ? 'Hide' : 'Show'} advanced options
-        </button>
-
-        {showAdvanced && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-warm-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-warm-gray-200">
             <div>
               <label className="block text-sm font-medium text-warm-gray-700 mb-2">
                 Category
@@ -187,7 +176,6 @@ const QuickExpenseForm = () => {
               </select>
             </div>
           </div>
-        )}
       </form>
     </div>
   );
