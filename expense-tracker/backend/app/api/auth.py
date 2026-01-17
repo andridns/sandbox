@@ -28,11 +28,19 @@ def is_production_environment() -> bool:
     env = os.getenv("ENVIRONMENT", "").lower()
     # Check for production indicators:
     # 1. Explicit ENVIRONMENT=production
-    # 2. Railway environment (Railway sets RAILWAY_PROJECT_ID when deployed)
-    # 3. RAILWAY_ENVIRONMENT=production
-    railway_deployed = bool(os.getenv("RAILWAY_PROJECT_ID"))
+    # 2. Railway environment name (most reliable - Railway sets this to "production" in production)
+    # 3. RAILWAY_ENVIRONMENT_NAME=production (Railway's built-in variable)
+    # 4. Fallback: RAILWAY_PROJECT_ID exists (less reliable, exists in all Railway envs)
+    railway_env_name = os.getenv("RAILWAY_ENVIRONMENT_NAME", "").lower()
     railway_env = os.getenv("RAILWAY_ENVIRONMENT", "").lower()
-    return env == "production" or railway_env == "production" or railway_deployed
+    railway_deployed = bool(os.getenv("RAILWAY_PROJECT_ID"))
+    
+    return (
+        env == "production" 
+        or railway_env_name == "production" 
+        or railway_env == "production" 
+        or railway_deployed
+    )
 
 
 @router.post("/auth/login", response_model=UserResponse)
@@ -88,7 +96,14 @@ async def login(
         # samesite="none" is required for cross-site requests (frontend and backend on different domains)
         is_prod = is_production_environment()
         samesite_value = "none" if is_prod else "lax"
-        logger.info(f"Setting cookie: secure={is_prod}, samesite={samesite_value}, is_production={is_prod}")
+        # Log environment detection details for debugging
+        env_vars = {
+            "ENVIRONMENT": os.getenv("ENVIRONMENT"),
+            "RAILWAY_ENVIRONMENT_NAME": os.getenv("RAILWAY_ENVIRONMENT_NAME"),
+            "RAILWAY_ENVIRONMENT": os.getenv("RAILWAY_ENVIRONMENT"),
+            "RAILWAY_PROJECT_ID": "SET" if os.getenv("RAILWAY_PROJECT_ID") else "NOT SET"
+        }
+        logger.info(f"Setting cookie: secure={is_prod}, samesite={samesite_value}, is_production={is_prod}, env_vars={env_vars}")
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
@@ -203,7 +218,14 @@ async def google_login(
         samesite_value = "none" if is_prod else "lax"
         import logging
         logger = logging.getLogger(__name__)
-        logger.info(f"Setting cookie for Google login: secure={is_prod}, samesite={samesite_value}, is_production={is_prod}")
+        # Log environment detection details for debugging
+        env_vars = {
+            "ENVIRONMENT": os.getenv("ENVIRONMENT"),
+            "RAILWAY_ENVIRONMENT_NAME": os.getenv("RAILWAY_ENVIRONMENT_NAME"),
+            "RAILWAY_ENVIRONMENT": os.getenv("RAILWAY_ENVIRONMENT"),
+            "RAILWAY_PROJECT_ID": "SET" if os.getenv("RAILWAY_PROJECT_ID") else "NOT SET"
+        }
+        logger.info(f"Setting cookie for Google login: secure={is_prod}, samesite={samesite_value}, is_production={is_prod}, env_vars={env_vars}")
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
