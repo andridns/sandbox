@@ -158,7 +158,7 @@ const Login = () => {
           <div className="mt-6 text-center text-sm text-warm-gray-600">
             <p>Default credentials:</p>
             <p className="font-mono text-xs mt-1">Username: admin</p>
-            <p className="font-mono text-xs">Password: admin123</p>
+            <p className="font-mono text-xs">Password: 23052020</p>
           </div>
         )}
       </div>

@@ -58,7 +58,7 @@ backend/
   - Set this to change the default admin username
   - On startup, the system will create or update the user with this username
 
-- `DEFAULT_PASSWORD`: Default admin password (default: "admin123")
+- `DEFAULT_PASSWORD`: Default admin password (default: "23052020")
   - Set this to change the default admin password
   - On every startup, if this is set, the system will update the user's password
   - **Important**: In Railway or production, set this to a strong password

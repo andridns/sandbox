@@ -191,7 +191,7 @@ def seed_user():
     print("Seeding/updating user...")
     # Get username and password from environment or use defaults
     username = os.getenv("DEFAULT_USERNAME", "admin")
-    password = os.getenv("DEFAULT_PASSWORD", "admin123")
+    password = os.getenv("DEFAULT_PASSWORD", "23052020")
     
     existing_user = db.query(User).filter(User.username == username).first()
     

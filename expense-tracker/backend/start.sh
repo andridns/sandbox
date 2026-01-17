@@ -47,7 +47,7 @@ import os
 db = SessionLocal()
 try:
     username = os.getenv('DEFAULT_USERNAME', 'admin')
-    password = os.getenv('DEFAULT_PASSWORD', 'admin123')  # Use default if not set
+    password = os.getenv('DEFAULT_PASSWORD', '23052020')  # Use default if not set
     
     user = db.query(User).filter(User.username == username).first()
     if user:

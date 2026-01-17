@@ -243,7 +243,7 @@ async def debug_auth_config(db: Session = Depends(get_db)):
         
         # Test password verification
         from app.core.auth import verify_password
-        test_password = os.getenv("DEFAULT_PASSWORD", "admin123")
+        test_password = os.getenv("DEFAULT_PASSWORD", "23052020")
         if admin_user.password_hash:
             admin_info["password_verification_test"] = verify_password(test_password, admin_user.password_hash)
     else:
