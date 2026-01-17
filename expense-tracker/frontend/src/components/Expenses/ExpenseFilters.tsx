@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi, tagsApi } from '../../services/api';
 import type { ExpenseFilters } from '../../types';
@@ -12,6 +12,7 @@ interface ExpenseFiltersProps {
 const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersProps) => {
   const [localFilters, setLocalFilters] = useState<ExpenseFilters>(filters);
   const [tagQuery, setTagQuery] = useState('');
+  const lastSentFilters = useRef<ExpenseFilters>(filters);
   
   // Get date range options (generated dynamically)
   const dateRangeOptions = useMemo(() => getDateRangeOptions(), []);
@@ -43,10 +44,26 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
     enabled: tagQuery.length > 0,
   });
 
-  // Sync localFilters when filters prop changes
+  // Sync localFilters when filters prop changes from outside (not from our own onFiltersChange)
   useEffect(() => {
-    setLocalFilters(filters);
-  }, [filters]);
+    // Only sync if filters prop is different from what we last sent
+    // This prevents syncing back our own changes
+    const filtersChanged = 
+      filters.category_id !== lastSentFilters.current.category_id ||
+      filters.start_date !== lastSentFilters.current.start_date ||
+      filters.end_date !== lastSentFilters.current.end_date ||
+      filters.tags !== lastSentFilters.current.tags ||
+      filters.payment_method !== lastSentFilters.current.payment_method ||
+      filters.min_amount !== lastSentFilters.current.min_amount ||
+      filters.max_amount !== lastSentFilters.current.max_amount ||
+      filters.search !== lastSentFilters.current.search;
+    
+    if (filtersChanged) {
+      setLocalFilters(filters);
+      // Update lastSentFilters to prevent re-syncing
+      lastSentFilters.current = filters;
+    }
+  }, [filters.category_id, filters.start_date, filters.end_date, filters.tags, filters.payment_method, filters.min_amount, filters.max_amount, filters.search]);
 
   // Detect current date range preset from filters
   useEffect(() => {
@@ -67,36 +84,44 @@ const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersPro
     setDateRangePreset(matchedPreset?.value || 'custom');
   }, [localFilters.start_date, localFilters.end_date, dateRangeOptions]);
 
-  useEffect(() => {
-    onFiltersChange(localFilters);
-  }, [localFilters, onFiltersChange]);
-
   const handleChange = (key: keyof ExpenseFilters, value: any) => {
-    setLocalFilters((prev) => ({ ...prev, [key]: value || undefined }));
+    const newFilters = { ...localFilters, [key]: value || undefined };
+    setLocalFilters(newFilters);
+    lastSentFilters.current = newFilters;
+    onFiltersChange(newFilters);
   };
 
   const handleMinAmountChange = (value: string) => {
     const minAmount = value === '' ? undefined : Number(value);
-    setLocalFilters((prev) => ({
-      ...prev,
+    const newFilters = {
+      ...localFilters,
       min_amount: minAmount,
       max_amount: undefined, // Clear max_amount since we're only filtering by minimum
-    }));
+    };
+    setLocalFilters(newFilters);
+    lastSentFilters.current = newFilters;
+    onFiltersChange(newFilters);
   };
 
   const handleDateRangeChange = (preset: DateRangePreset) => {
     setDateRangePreset(preset);
     const range = getDateRange(preset);
-    setLocalFilters((prev) => ({
-      ...prev,
+    const newFilters = {
+      ...localFilters,
       start_date: range.start_date,
       end_date: range.end_date,
-    }));
+    };
+    setLocalFilters(newFilters);
+    lastSentFilters.current = newFilters;
+    onFiltersChange(newFilters);
   };
 
   const clearFilters = () => {
-    setLocalFilters({});
+    const newFilters = {};
+    setLocalFilters(newFilters);
     setDateRangePreset('all');
+    lastSentFilters.current = newFilters;
+    onFiltersChange(newFilters);
   };
 
   return (
