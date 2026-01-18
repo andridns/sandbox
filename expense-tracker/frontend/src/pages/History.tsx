@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { historyApi, ExpenseHistory, categoriesApi, Category } from '../services/api';
+import { historyApi, ExpenseHistory, categoriesApi } from '../services/api';
+import type { Category } from '../types';
 
 interface ExpenseData {
   amount?: number;

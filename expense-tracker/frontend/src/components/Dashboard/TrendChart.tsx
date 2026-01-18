@@ -73,7 +73,7 @@ const TrendChart = ({ data, title = "Spending Trends", onZoomChange, onDataPoint
       mode: 'index' as const,
       intersect: false,
     },
-    onClick: (event, elements) => {
+    onClick: (_event, elements) => {
       if (elements && elements.length > 0 && onDataPointClick) {
         const element = elements[0];
         const index = element.index;
