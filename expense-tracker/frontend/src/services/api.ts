@@ -152,9 +152,9 @@ export const reportsApi = {
     });
     return response.data;
   },
-  getTrends: async (startDate?: string, endDate?: string, period?: string): Promise<TrendData> => {
+  getTrends: async (period?: string, categoryId?: string): Promise<TrendData> => {
     const response = await api.get<TrendData>('/reports/trends', {
-      params: { start_date: startDate, end_date: endDate, period },
+      params: { period, category_id: categoryId },
     });
     return response.data;
   },

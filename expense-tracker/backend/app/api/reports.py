@@ -91,65 +91,96 @@ async def get_summary(
 
 @router.get("/reports/trends")
 async def get_trends(
-    start_date: Optional[date] = Query(None),
-    end_date: Optional[date] = Query(None),
-    period: Optional[str] = Query("monthly"),
+    period: Optional[str] = Query("monthly"),  # monthly, quarterly, yearly
+    category_id: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get spending trends"""
-    if not start_date or not end_date:
-        today = date.today()
-        if period == "yearly":
-            start_date = date(today.year - 1, 1, 1)
-            end_date = date(today.year, 12, 31)
-        else:
-            # Last 6 months
-            start_date = date(today.year, max(1, today.month - 5), 1)
-            end_date = date(today.year, today.month, 28)
+    """Get spending trends grouped by period"""
+    from uuid import UUID
     
-    query = db.query(Expense).filter(
-        Expense.date >= start_date,
-        Expense.date <= end_date
-    )
+    # Build base query
+    query = db.query(Expense)
+    
+    # Filter by category if provided
+    if category_id:
+        try:
+            query = query.filter(Expense.category_id == UUID(category_id))
+        except ValueError:
+            pass  # Invalid UUID, ignore filter
     
     if period == "yearly":
         # Group by year
         results = db.query(
-            extract('year', Expense.date).label('period'),
+            extract('year', Expense.date).label('year'),
             func.sum(Expense.amount).label('total')
-        ).filter(
-            Expense.date >= start_date,
-            Expense.date <= end_date
-        ).group_by('period').order_by('period').all()
-    else:
+        )
+        if category_id:
+            try:
+                results = results.filter(Expense.category_id == UUID(category_id))
+            except ValueError:
+                pass
+        results = results.group_by('year').order_by('year').all()
+        
+        trends = []
+        for result in results:
+            trends.append({
+                "period": f"{int(result.year)}",
+                "total": float(result.total or 0)
+            })
+    elif period == "quarterly":
+        # Group by quarter (every 3 months)
+        # Calculate quarter: (month - 1) // 3 + 1
+        results = db.query(
+            extract('year', Expense.date).label('year'),
+            extract('month', Expense.date).label('month'),
+            func.sum(Expense.amount).label('total')
+        )
+        if category_id:
+            try:
+                results = results.filter(Expense.category_id == UUID(category_id))
+            except ValueError:
+                pass
+        results = results.group_by('year', 'month').order_by('year', 'month').all()
+        
+        # Group months into quarters
+        quarterly_data = {}
+        for result in results:
+            quarter = ((int(result.month) - 1) // 3) + 1
+            key = f"{int(result.year)}-Q{quarter}"
+            if key not in quarterly_data:
+                quarterly_data[key] = 0.0
+            quarterly_data[key] += float(result.total or 0)
+        
+        trends = []
+        for key in sorted(quarterly_data.keys()):
+            trends.append({
+                "period": key,
+                "total": quarterly_data[key]
+            })
+    else:  # monthly
         # Group by month
         results = db.query(
             extract('year', Expense.date).label('year'),
             extract('month', Expense.date).label('month'),
             func.sum(Expense.amount).label('total')
-        ).filter(
-            Expense.date >= start_date,
-            Expense.date <= end_date
-        ).group_by('year', 'month').order_by('year', 'month').all()
-    
-    trends = []
-    for result in results:
-        if period == "yearly":
-            trends.append({
-                "period": f"{int(result.period)}",
-                "total": float(result.total)
-            })
-        else:
+        )
+        if category_id:
+            try:
+                results = results.filter(Expense.category_id == UUID(category_id))
+            except ValueError:
+                pass
+        results = results.group_by('year', 'month').order_by('year', 'month').all()
+        
+        trends = []
+        for result in results:
             trends.append({
                 "period": f"{int(result.year)}-{int(result.month):02d}",
-                "total": float(result.total)
+                "total": float(result.total or 0)
             })
     
     return {
         "period": period,
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat(),
         "trends": trends
     }
 

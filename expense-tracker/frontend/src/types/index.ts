@@ -105,8 +105,8 @@ export interface SummaryReport {
 
 export interface TrendData {
   period: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
   trends: Array<{
     period: string;
     total: number;

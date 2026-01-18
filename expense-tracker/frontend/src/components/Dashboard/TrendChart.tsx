@@ -8,8 +8,11 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions,
 } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import type { TrendData } from '../../types';
+import { useRef } from 'react';
 
 ChartJS.register(
   CategoryScale,
@@ -18,18 +21,23 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  zoomPlugin
 );
 
 interface TrendChartProps {
   data?: TrendData;
+  title?: string;
+  onZoomChange?: (startPeriod: string, endPeriod: string) => void;
 }
 
-const TrendChart = ({ data }: TrendChartProps) => {
+const TrendChart = ({ data, title = "Spending Trends", onZoomChange }: TrendChartProps) => {
+  const chartRef = useRef<ChartJS<'line', number[], string>>(null);
+
   if (!data || !data.trends || data.trends.length === 0) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-apple">
-        <h3 className="text-lg font-semibold text-warm-gray-800 mb-4">Spending Trends</h3>
+        <h3 className="text-lg font-semibold text-warm-gray-800 mb-4">{title}</h3>
         <div className="flex items-center justify-center h-64">
           <p className="text-warm-gray-500">No data available</p>
         </div>
@@ -51,9 +59,19 @@ const TrendChart = ({ data }: TrendChartProps) => {
     ],
   };
 
-  const options = {
+  const handleResetZoom = () => {
+    if (chartRef.current) {
+      chartRef.current.resetZoom();
+    }
+  };
+
+  const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         display: false,
@@ -69,8 +87,53 @@ const TrendChart = ({ data }: TrendChartProps) => {
           },
         },
       },
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+            speed: 0.1,
+          },
+          pinch: {
+            enabled: true,
+          },
+          mode: 'x' as const,
+          onZoom: ({ chart }: { chart: ChartJS<'line', number[], string> }) => {
+            const xScale = chart.scales.x;
+            if (xScale && onZoomChange) {
+              const minIndex = Math.floor(xScale.min);
+              const maxIndex = Math.ceil(xScale.max);
+              const labels = chart.data.labels as string[];
+              if (labels && labels.length > 0) {
+                const startPeriod = labels[Math.max(0, minIndex)] || labels[0];
+                const endPeriod = labels[Math.min(labels.length - 1, maxIndex)] || labels[labels.length - 1];
+                onZoomChange(startPeriod, endPeriod);
+              }
+            }
+          },
+        },
+        pan: {
+          enabled: true,
+          mode: 'x' as const,
+          onPan: ({ chart }: { chart: ChartJS<'line', number[], string> }) => {
+            const xScale = chart.scales.x;
+            if (xScale && onZoomChange) {
+              const minIndex = Math.floor(xScale.min);
+              const maxIndex = Math.ceil(xScale.max);
+              const labels = chart.data.labels as string[];
+              if (labels && labels.length > 0) {
+                const startPeriod = labels[Math.max(0, minIndex)] || labels[0];
+                const endPeriod = labels[Math.min(labels.length - 1, maxIndex)] || labels[labels.length - 1];
+                onZoomChange(startPeriod, endPeriod);
+              }
+            }
+          },
+        },
+      },
     },
     scales: {
+      x: {
+        type: 'category' as const,
+      },
       y: {
         beginAtZero: true,
         ticks: {
@@ -88,10 +151,21 @@ const TrendChart = ({ data }: TrendChartProps) => {
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-apple">
-      <h3 className="text-lg font-semibold text-warm-gray-800 mb-4">Spending Trends</h3>
-      <div className="h-64">
-        <Line data={chartData} options={options} />
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-warm-gray-800">{title}</h3>
+        <button
+          onClick={handleResetZoom}
+          className="px-3 py-1.5 text-xs font-medium text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-lg transition-colors"
+        >
+          Reset Zoom
+        </button>
       </div>
+      <div className="h-64">
+        <Line ref={chartRef} data={chartData} options={options} />
+      </div>
+      <p className="text-xs text-warm-gray-500 mt-2">
+        💡 Drag to pan • Scroll or pinch to zoom • Double-click to reset
+      </p>
     </div>
   );
 };

@@ -174,3 +174,27 @@ ALLOWED_EMAILS=user1@gmail.com,user2@gmail.com,user3@gmail.com
 ```
 
 Then redeploy the backend service.
+
+## Updating OAuth for Custom Domain
+
+If you've set up a custom domain for your app (see `CUSTOM_DOMAIN_SETUP.md`), you need to update your Google OAuth configuration:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project
+3. Navigate to **APIs & Services** → **Credentials**
+4. Click on your OAuth 2.0 Client ID
+5. Under **Authorized JavaScript origins**, click **"+ ADD URI"** and add:
+   ```
+   https://your-custom-domain.xyz
+   ```
+   (Replace with your actual custom domain)
+
+6. Under **Authorized redirect URIs**, click **"+ ADD URI"** and add:
+   ```
+   https://your-custom-domain.xyz
+   ```
+   (Replace with your actual custom domain)
+
+7. Click **"SAVE"**
+
+**Note**: You can keep both your Railway domain and custom domain in the authorized URIs list. This allows OAuth to work on both domains.

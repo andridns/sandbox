@@ -1,142 +1,102 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { reportsApi, exportApi } from '../services/api';
-import { format } from 'date-fns';
-import { toast } from 'react-hot-toast';
-import CategoryChart from '../components/Dashboard/CategoryChart';
+import { reportsApi, categoriesApi } from '../services/api';
 import TrendChart from '../components/Dashboard/TrendChart';
-import SummaryCards from '../components/Dashboard/SummaryCards';
+import type { TrendData } from '../types';
+
+type PeriodType = 'monthly' | 'quarterly' | 'yearly';
 
 const Reports = () => {
-  const today = new Date();
-  const [startDate, setStartDate] = useState(
-    format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd')
-  );
-  const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'));
-  const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [period, setPeriod] = useState<PeriodType>('monthly');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
-  const { data: summary } = useQuery({
-    queryKey: ['summary', startDate, endDate, period],
-    queryFn: () => reportsApi.getSummary(startDate, endDate, period),
-  });
-
-  const { data: categoryBreakdown } = useQuery({
-    queryKey: ['category-breakdown', startDate, endDate],
-    queryFn: () => reportsApi.getCategoryBreakdown(startDate, endDate),
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAll(),
   });
 
   const { data: trends } = useQuery({
-    queryKey: ['trends', startDate, endDate, period],
-    queryFn: () => reportsApi.getTrends(startDate, endDate, period),
+    queryKey: ['trends', period, selectedCategoryId],
+    queryFn: () => reportsApi.getTrends(period, selectedCategoryId || undefined),
   });
-
-  const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
-    try {
-      let blob: Blob;
-      let filename: string;
-
-      switch (format) {
-        case 'csv':
-          blob = await exportApi.exportCSV(startDate, endDate);
-          filename = 'expenses.csv';
-          break;
-        case 'excel':
-          blob = await exportApi.exportExcel(startDate, endDate);
-          filename = 'expenses.xlsx';
-          break;
-        case 'pdf':
-          blob = await exportApi.exportPDF(startDate, endDate);
-          filename = 'expenses.pdf';
-          break;
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.success(`Exported to ${format.toUpperCase()}`);
-    } catch (error) {
-      toast.error(`Failed to export to ${format.toUpperCase()}`);
-    }
-  };
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h2 className="text-2xl md:text-3xl font-semibold text-warm-gray-800">Reports</h2>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
+      <h2 className="text-2xl md:text-3xl font-semibold text-warm-gray-800">Reports</h2>
+
+      {/* Period Toggle */}
+      <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
+        <label className="block text-sm font-semibold text-warm-gray-700 mb-3">Period</label>
+        <div className="flex gap-2 md:gap-3 flex-wrap">
           <button
-            onClick={() => handleExport('csv')}
-            className="flex-1 sm:flex-none bg-warm-gray-600 text-white px-4 py-2.5 md:px-5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium text-sm md:text-base"
+            onClick={() => setPeriod('monthly')}
+            className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+              period === 'monthly'
+                ? 'bg-primary-600 text-white shadow-apple hover:bg-primary-700 hover:shadow-apple-lg'
+                : 'bg-warm-gray-100 text-warm-gray-700 hover:bg-primary-50 hover:text-primary-600 border border-warm-gray-200'
+            }`}
           >
-            CSV
+            Monthly
           </button>
           <button
-            onClick={() => handleExport('excel')}
-            className="flex-1 sm:flex-none bg-warm-gray-600 text-white px-4 py-2.5 md:px-5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium text-sm md:text-base"
+            onClick={() => setPeriod('quarterly')}
+            className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+              period === 'quarterly'
+                ? 'bg-primary-600 text-white shadow-apple hover:bg-primary-700 hover:shadow-apple-lg'
+                : 'bg-warm-gray-100 text-warm-gray-700 hover:bg-primary-50 hover:text-primary-600 border border-warm-gray-200'
+            }`}
           >
-            Excel
+            Quarterly
           </button>
           <button
-            onClick={() => handleExport('pdf')}
-            className="flex-1 sm:flex-none bg-warm-gray-600 text-white px-4 py-2.5 md:px-5 rounded-xl hover:bg-warm-gray-700 transition-all shadow-apple font-medium text-sm md:text-base"
+            onClick={() => setPeriod('yearly')}
+            className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 ${
+              period === 'yearly'
+                ? 'bg-primary-600 text-white shadow-apple hover:bg-primary-700 hover:shadow-apple-lg'
+                : 'bg-warm-gray-100 text-warm-gray-700 hover:bg-primary-50 hover:text-primary-600 border border-warm-gray-200'
+            }`}
           >
-            PDF
+            Yearly
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-4 md:p-6 rounded-2xl shadow-apple">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          <div>
-            <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-warm-gray-700 mb-2">
-              Period
-            </label>
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as 'monthly' | 'yearly')}
-              className="w-full px-3 py-2.5 md:px-4 border-2 border-warm-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-warm-gray-800 transition-all text-sm md:text-base"
+      {/* Category Filter Buttons */}
+      <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
+        <label className="block text-sm font-semibold text-warm-gray-700 mb-3">Category</label>
+        <div className="flex gap-2 md:gap-3 flex-wrap">
+          <button
+            onClick={() => setSelectedCategoryId(null)}
+            className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 flex items-center gap-1.5 ${
+              selectedCategoryId === null
+                ? 'bg-primary-600 text-white shadow-apple hover:bg-primary-700 hover:shadow-apple-lg'
+                : 'bg-warm-gray-100 text-warm-gray-700 hover:bg-primary-50 hover:text-primary-600 border border-warm-gray-200'
+            }`}
+          >
+            <span>All Categories</span>
+          </button>
+          {categories?.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategoryId(cat.id)}
+              className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 flex items-center gap-1.5 ${
+                selectedCategoryId === cat.id
+                  ? 'bg-primary-600 text-white shadow-apple hover:bg-primary-700 hover:shadow-apple-lg'
+                  : 'bg-warm-gray-100 text-warm-gray-700 hover:bg-primary-50 hover:text-primary-600 border border-warm-gray-200'
+              }`}
             >
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
+              <span>{cat.icon || '📁'}</span>
+              <span>{cat.name}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      <SummaryCards summary={summary} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CategoryChart data={categoryBreakdown} />
-        <TrendChart data={trends} />
-      </div>
+      {/* Trend Chart */}
+      <TrendChart 
+        data={trends} 
+        title={`Expense Trends${selectedCategoryId && categories?.find(c => c.id === selectedCategoryId) ? ` - ${categories.find(c => c.id === selectedCategoryId)?.name}` : ''}`}
+      />
     </div>
   );
 };
