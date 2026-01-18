@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
-from typing import Optional, List
+from sqlalchemy import and_, or_, func, case
+from typing import Optional, List, Dict
 from datetime import date
 from uuid import UUID
 from decimal import Decimal
@@ -13,6 +13,7 @@ from app.models.history import ExpenseHistory
 from app.models.user import User
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.core.auth import get_current_user
+from app.services.currency import get_exchange_rates
 
 router = APIRouter()
 
@@ -52,11 +53,76 @@ async def get_expenses(
     if payment_method:
         query = query.filter(Expense.payment_method == payment_method)
     
-    if min_amount is not None:
-        query = query.filter(Expense.amount >= Decimal(str(min_amount)))
-    
-    if max_amount is not None:
-        query = query.filter(Expense.amount <= Decimal(str(max_amount)))
+    # Handle amount filtering with currency conversion to IDR
+    if min_amount is not None or max_amount is not None:
+        # Get unique currencies from expenses
+        unique_currencies = db.query(Expense.currency).distinct().all()
+        currencies = [curr[0] for curr in unique_currencies]
+        
+        # If no currencies found, apply simple filtering
+        if not currencies:
+            if min_amount is not None:
+                query = query.filter(Expense.amount >= Decimal(str(min_amount)))
+            if max_amount is not None:
+                query = query.filter(Expense.amount <= Decimal(str(max_amount)))
+        else:
+            # Fetch exchange rates for IDR conversion
+            # For each currency, fetch rates with that currency as base to get IDR rate directly
+            try:
+                # Build conversion rates dictionary: currency -> IDR rate
+                conversion_rates: Dict[str, Decimal] = {}
+                
+                # Fetch USD rates once (most common base currency)
+                usd_rates = await get_exchange_rates("USD")
+                idr_from_usd = usd_rates.get("IDR", 1.0)
+                
+                for currency in currencies:
+                    currency_upper = currency.upper()
+                    if currency_upper == "IDR":
+                        conversion_rates[currency] = Decimal("1.0")
+                    elif currency_upper == "USD":
+                        conversion_rates[currency] = Decimal(str(idr_from_usd))
+                    else:
+                        # Fetch rates for this currency (base = currency)
+                        # The API returns rates[IDR] which is IDR per 1 unit of currency
+                        try:
+                            curr_rates = await get_exchange_rates(currency_upper)
+                            idr_rate = curr_rates.get("IDR")
+                            if idr_rate:
+                                conversion_rates[currency] = Decimal(str(idr_rate))
+                            else:
+                                # Fallback: convert via USD
+                                usd_rate = curr_rates.get("USD")
+                                if usd_rate and usd_rate > 0:
+                                    # Currency -> USD -> IDR: amount * (IDR_rate / USD_rate)
+                                    conversion_rates[currency] = Decimal(str(float(idr_from_usd) / float(usd_rate)))
+                                else:
+                                    # If conversion not possible, use 1:1 (no conversion)
+                                    conversion_rates[currency] = Decimal("1.0")
+                        except Exception:
+                            # Fallback: if we can't get rates, assume 1:1 (no conversion)
+                            conversion_rates[currency] = Decimal("1.0")
+                
+                # Build CASE statement to convert amounts to IDR
+                when_conditions = [
+                    (Expense.currency == currency, Expense.amount * conversion_rates[currency])
+                    for currency in conversion_rates.keys()
+                ]
+                amount_in_idr = case(*[(condition, result) for condition, result in when_conditions], else_=Expense.amount)
+                
+                # Filter on IDR-equivalent amounts
+                if min_amount is not None:
+                    query = query.filter(amount_in_idr >= Decimal(str(min_amount)))
+                
+                if max_amount is not None:
+                    query = query.filter(amount_in_idr <= Decimal(str(max_amount)))
+            except Exception as e:
+                # If currency conversion fails, fall back to original filtering (by original currency amount)
+                # This ensures the API doesn't break if exchange rate API is unavailable
+                if min_amount is not None:
+                    query = query.filter(Expense.amount >= Decimal(str(min_amount)))
+                if max_amount is not None:
+                    query = query.filter(Expense.amount <= Decimal(str(max_amount)))
     
     if search:
         search_term = f"%{search}%"
