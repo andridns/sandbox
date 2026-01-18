@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { expensesApi } from '../services/api';
 import { toast } from 'react-hot-toast';
 import ExpenseList from '../components/Expenses/ExpenseList';

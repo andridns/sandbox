@@ -18,21 +18,6 @@ interface ExpenseListProps {
 type SortField = 'date' | 'description' | 'category' | 'amount' | 'payment';
 type SortDirection = 'asc' | 'desc';
 
-// Payment method emoji mapping
-const getPaymentMethodEmoji = (method: string): string => {
-  const emojiMap: Record<string, string> = {
-    'Cash': '💵',
-    'Debit Card': '💳',
-    'Credit Card': '💳',
-    'GoPay': '📱',
-    'OVO': '📱',
-    'DANA': '📱',
-    'LinkAja': '📱',
-    'ShopeePay': '📱',
-  };
-  return emojiMap[method] || '💳';
-};
-
 // Get category display (icon or abbreviation)
 const getCategoryDisplay = (category: Category | undefined): string => {
   if (!category) return '📁';

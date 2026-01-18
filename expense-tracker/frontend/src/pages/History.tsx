@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { historyApi, type ExpenseHistory } from '../services/api';
+import { historyApi } from '../services/api';
 
 const History = () => {
   const [skip, setSkip] = useState(0);
