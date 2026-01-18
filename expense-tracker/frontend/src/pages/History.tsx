@@ -110,6 +110,20 @@ const History = () => {
     }).format(amount);
   };
 
+  // Format expense date
+  const formatExpenseDate = (dateString: string | undefined): string => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   // Get detailed change information for an entry
   const getChangeDetails = (entry: ExpenseHistory) => {
     const oldData = parseExpenseData(entry.old_data);
@@ -120,6 +134,7 @@ const History = () => {
         type: 'create',
         amount: formatAmount(newData.amount, newData.currency),
         description: newData.description || entry.description || 'New expense',
+        expenseDate: formatExpenseDate(newData.date),
       };
     }
 
@@ -128,6 +143,7 @@ const History = () => {
         type: 'delete',
         amount: formatAmount(oldData.amount, oldData.currency),
         description: oldData.description || entry.description || 'Deleted expense',
+        expenseDate: formatExpenseDate(oldData.date),
       };
     }
 
@@ -158,12 +174,14 @@ const History = () => {
         type: 'update',
         changes,
         description: newData.description || oldData.description || 'Updated expense',
+        expenseDate: formatExpenseDate(oldData.date), // Show original expense date
       };
     }
 
     return {
       type: entry.action,
       description: entry.description || '-',
+      expenseDate: undefined,
     };
   };
 
@@ -305,6 +323,13 @@ const History = () => {
                       </div>
                     )}
                     
+                    {/* Show expense date for create/delete/update */}
+                    {changeDetails.expenseDate && (
+                      <div className="text-[10px] text-modern-text-light font-medium mb-1">
+                        Expense Date: {changeDetails.expenseDate}
+                      </div>
+                    )}
+                    
                     {/* Show description */}
                     <div className="text-xs text-modern-text font-medium mt-1 mb-1">
                       {changeDetails.description}
@@ -359,6 +384,13 @@ const History = () => {
                             {(changeDetails.type === 'create' || changeDetails.type === 'delete') && (
                               <div className="font-semibold text-modern-text">
                                 {changeDetails.amount}
+                              </div>
+                            )}
+                            
+                            {/* Show expense date for create/delete/update */}
+                            {changeDetails.expenseDate && (
+                              <div className="text-xs text-modern-text-light font-medium">
+                                Expense Date: {changeDetails.expenseDate}
                               </div>
                             )}
                             
