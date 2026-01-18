@@ -213,6 +213,10 @@ export const exportApi = {
     });
     return response.data;
   },
+  getCount: async (): Promise<{ count: number }> => {
+    const response = await api.get<{ count: number }>('/export/count');
+    return response.data;
+  },
 };
 
 // Import

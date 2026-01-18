@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { adminApi, exportApi } from '../services/api';
 import toast from 'react-hot-toast';
 import ExcelImport from '../components/Import/ExcelImport';
@@ -7,6 +7,8 @@ const Settings = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [transactionCount, setTransactionCount] = useState<number | null>(null);
+  const [isLoadingCount, setIsLoadingCount] = useState(true);
 
   const handleDeleteAllData = async () => {
     setIsDeleting(true);
@@ -24,6 +26,24 @@ const Settings = () => {
       setIsDeleting(false);
     }
   };
+
+  useEffect(() => {
+    const fetchTransactionCount = async () => {
+      try {
+        setIsLoadingCount(true);
+        const result = await exportApi.getCount();
+        setTransactionCount(result.count);
+      } catch (error: any) {
+        console.error('Failed to fetch transaction count:', error);
+        // Don't show error toast, just set to null
+        setTransactionCount(null);
+      } finally {
+        setIsLoadingCount(false);
+      }
+    };
+
+    fetchTransactionCount();
+  }, []);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -43,6 +63,10 @@ const Settings = () => {
 
       toast.dismiss();
       toast.success('Data exported successfully!');
+      
+      // Refresh the count after export (in case user wants to verify)
+      const result = await exportApi.getCount();
+      setTransactionCount(result.count);
     } catch (error: any) {
       toast.dismiss();
       toast.error(error.response?.data?.detail || 'Failed to export data');
@@ -72,6 +96,15 @@ const Settings = () => {
               <p className="text-xs md:text-sm text-modern-text-light mb-4">
                 Download all your expenses as an Excel file (.xlsx) for backup or analysis.
               </p>
+              
+              {!isLoadingCount && transactionCount !== null && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-semibold">Total transactions in database:</span>{' '}
+                    <span className="text-lg font-bold text-blue-900">{transactionCount.toLocaleString()}</span>
+                  </p>
+                </div>
+              )}
               
               <button
                 onClick={handleExport}

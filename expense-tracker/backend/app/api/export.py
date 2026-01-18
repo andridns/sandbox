@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Optional
 from datetime import date
 import csv
@@ -256,3 +257,13 @@ async def export_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": "attachment; filename=expenses.pdf"}
     )
+
+
+@router.get("/export/count")
+async def get_expense_count(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get the total count of expenses/transactions in the database"""
+    count = db.query(func.count(Expense.id)).scalar()
+    return {"count": count}
