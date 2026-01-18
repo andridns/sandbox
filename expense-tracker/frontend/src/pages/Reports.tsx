@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { reportsApi, categoriesApi } from '../services/api';
 import TrendChart from '../components/Dashboard/TrendChart';
-import type { TrendData } from '../types';
 
 type PeriodType = 'monthly' | 'quarterly' | 'yearly';
 

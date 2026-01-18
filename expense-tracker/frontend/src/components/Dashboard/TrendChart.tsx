@@ -97,12 +97,12 @@ const TrendChart = ({ data, title = "Spending Trends", onZoomChange }: TrendChar
             enabled: true,
           },
           mode: 'x' as const,
-          onZoom: ({ chart }: { chart: ChartJS<'line', number[], string> }) => {
-            const xScale = chart.scales.x;
+          onZoom: (context: { chart: ChartJS }) => {
+            const xScale = context.chart.scales.x;
             if (xScale && onZoomChange) {
               const minIndex = Math.floor(xScale.min);
               const maxIndex = Math.ceil(xScale.max);
-              const labels = chart.data.labels as string[];
+              const labels = context.chart.data.labels as string[];
               if (labels && labels.length > 0) {
                 const startPeriod = labels[Math.max(0, minIndex)] || labels[0];
                 const endPeriod = labels[Math.min(labels.length - 1, maxIndex)] || labels[labels.length - 1];
@@ -114,12 +114,12 @@ const TrendChart = ({ data, title = "Spending Trends", onZoomChange }: TrendChar
         pan: {
           enabled: true,
           mode: 'x' as const,
-          onPan: ({ chart }: { chart: ChartJS<'line', number[], string> }) => {
-            const xScale = chart.scales.x;
+          onPan: (context: { chart: ChartJS }) => {
+            const xScale = context.chart.scales.x;
             if (xScale && onZoomChange) {
               const minIndex = Math.floor(xScale.min);
               const maxIndex = Math.ceil(xScale.max);
-              const labels = chart.data.labels as string[];
+              const labels = context.chart.data.labels as string[];
               if (labels && labels.length > 0) {
                 const startPeriod = labels[Math.max(0, minIndex)] || labels[0];
                 const endPeriod = labels[Math.min(labels.length - 1, maxIndex)] || labels[labels.length - 1];
