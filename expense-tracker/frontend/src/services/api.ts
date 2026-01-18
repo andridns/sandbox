@@ -11,6 +11,7 @@ import type {
   SummaryReport,
   TrendData,
   CategoryBreakdown,
+  TopExpensesResponse,
 } from '../types';
 
 // Use environment variable for API URL, fallback to relative path for local development
@@ -175,6 +176,27 @@ export const reportsApi = {
   getCategoryBreakdown: async (startDate?: string, endDate?: string): Promise<CategoryBreakdown> => {
     const response = await api.get<CategoryBreakdown>('/reports/category-breakdown', {
       params: { start_date: startDate, end_date: endDate },
+    });
+    return response.data;
+  },
+  getTopExpenses: async (periodType?: string, periodValue?: string, categoryId?: string, categoryIds?: string[], skip?: number, limit?: number): Promise<TopExpensesResponse> => {
+    const params: any = { period_type: periodType || 'monthly', limit: limit || 50 };
+    if (periodValue) {
+      params.period_value = periodValue;
+    }
+    if (skip !== undefined && skip > 0) {
+      params.skip = skip;
+    }
+    if (categoryIds && categoryIds.length > 0) {
+      params.category_ids = categoryIds;
+    } else if (categoryId) {
+      params.category_id = categoryId;
+    }
+    const response = await api.get<TopExpensesResponse>('/reports/top-expenses', { 
+      params,
+      paramsSerializer: {
+        indexes: null // Serialize arrays as repeated parameters (key=val1&key=val2) instead of brackets
+      }
     });
     return response.data;
   },

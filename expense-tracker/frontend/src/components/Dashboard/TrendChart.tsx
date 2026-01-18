@@ -29,9 +29,10 @@ interface TrendChartProps {
   data?: TrendData;
   title?: string;
   onZoomChange?: (startPeriod: string, endPeriod: string) => void;
+  onDataPointClick?: (period: string) => void;
 }
 
-const TrendChart = ({ data, title = "Spending Trends", onZoomChange }: TrendChartProps) => {
+const TrendChart = ({ data, title = "Spending Trends", onZoomChange, onDataPointClick }: TrendChartProps) => {
   const chartRef = useRef<ChartJS<'line', number[], string>>(null);
 
   if (!data || !data.trends || data.trends.length === 0) {
@@ -71,6 +72,16 @@ const TrendChart = ({ data, title = "Spending Trends", onZoomChange }: TrendChar
     interaction: {
       mode: 'index' as const,
       intersect: false,
+    },
+    onClick: (event, elements) => {
+      if (elements && elements.length > 0 && onDataPointClick) {
+        const element = elements[0];
+        const index = element.index;
+        const labels = chartData.labels;
+        if (labels && labels[index]) {
+          onDataPointClick(labels[index]);
+        }
+      }
     },
     plugins: {
       legend: {

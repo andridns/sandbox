@@ -124,3 +124,13 @@ export interface CategoryBreakdown {
     count: number;
   }>;
 }
+
+export interface TopExpensesResponse {
+  period_type: string;
+  period_value?: string | null;
+  start_date: string;
+  end_date: string;
+  expenses: Array<Expense & { amount_in_idr: number }>;
+  has_more: boolean;
+  total_count: number;
+}

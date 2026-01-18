@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from typing import Optional, List
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -251,4 +251,228 @@ async def get_category_breakdown(
         "start_date": start_date.isoformat(),
         "end_date": end_date.isoformat(),
         "breakdown": breakdown
+    }
+
+
+@router.get("/reports/top-expenses")
+async def get_top_expenses(
+    period_type: Optional[str] = Query("monthly", description="Period type: monthly, quarterly, yearly"),
+    period_value: Optional[str] = Query(None, description="Specific period value (e.g., '2025', '2025-03', '2025-Q1')"),
+    category_id: Optional[str] = Query(None, description="Single category ID (deprecated, use category_ids)"),
+    category_ids: Optional[List[str]] = Query(None, description="Multiple category IDs for OR filtering"),
+    limit: int = Query(50, ge=1, le=100, description="Number of top expenses to return"),
+    skip: int = Query(0, ge=0, description="Number of expenses to skip for pagination"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get top expenses filtered by period and category, sorted by IDR amount descending"""
+    
+    # Calculate date range based on period_value or period_type
+    today = date.today()
+    
+    if period_value:
+        # Parse specific period value
+        # Yearly: "2025"
+        # Monthly: "2025-03"
+        # Quarterly: "2025-Q1"
+        if "-Q" in period_value:
+            # Quarterly format: "2025-Q1"
+            parts = period_value.split("-Q")
+            if len(parts) == 2:
+                year = int(parts[0])
+                quarter = int(parts[1])
+                start_month = ((quarter - 1) * 3) + 1
+                end_month = quarter * 3
+                start_date = date(year, start_month, 1)
+                if end_month == 12:
+                    end_date = date(year, 12, 31)
+                else:
+                    end_date = date(year, end_month + 1, 1) - timedelta(days=1)
+            else:
+                # Fallback to current year
+                start_date = date(today.year, 1, 1)
+                end_date = date(today.year, 12, 31)
+        elif "-" in period_value:
+            # Monthly format: "2025-03"
+            parts = period_value.split("-")
+            if len(parts) == 2:
+                year = int(parts[0])
+                month = int(parts[1])
+                start_date = date(year, month, 1)
+                # Get last day of month
+                if month == 12:
+                    end_date = date(year, 12, 31)
+                else:
+                    end_date = date(year, month + 1, 1) - timedelta(days=1)
+            else:
+                # Fallback to current month
+                start_date = date(today.year, today.month, 1)
+                if today.month == 12:
+                    end_date = date(today.year, 12, 31)
+                else:
+                    end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        elif period_value.isdigit():
+            # Yearly format: "2025"
+            year = int(period_value)
+            start_date = date(year, 1, 1)
+            end_date = date(year, 12, 31)
+        else:
+            # Fallback to current period based on period_type
+            if period_type == "yearly":
+                start_date = date(today.year, 1, 1)
+                end_date = date(today.year, 12, 31)
+            elif period_type == "quarterly":
+                current_quarter = ((today.month - 1) // 3) + 1
+                start_month = ((current_quarter - 1) * 3) + 1
+                end_month = current_quarter * 3
+                start_date = date(today.year, start_month, 1)
+                if end_month == 12:
+                    end_date = date(today.year, 12, 31)
+                else:
+                    end_date = date(today.year, end_month + 1, 1) - timedelta(days=1)
+            else:  # monthly
+                start_date = date(today.year, today.month, 1)
+                if today.month == 12:
+                    end_date = date(today.year, 12, 31)
+                else:
+                    end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    else:
+        # Use period_type to determine current period
+        if period_type == "yearly":
+            start_date = date(today.year, 1, 1)
+            end_date = date(today.year, 12, 31)
+        elif period_type == "quarterly":
+            # Current quarter: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
+            current_quarter = ((today.month - 1) // 3) + 1
+            start_month = ((current_quarter - 1) * 3) + 1
+            end_month = current_quarter * 3
+            start_date = date(today.year, start_month, 1)
+            # Get last day of end month
+            if end_month == 12:
+                end_date = date(today.year, 12, 31)
+            else:
+                end_date = date(today.year, end_month + 1, 1) - timedelta(days=1)
+        else:  # monthly
+            start_date = date(today.year, today.month, 1)
+            # Get last day of current month
+            if today.month == 12:
+                end_date = date(today.year, 12, 31)
+            else:
+                end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    
+    # Build base query
+    query = db.query(Expense).filter(
+        Expense.date >= start_date,
+        Expense.date <= end_date
+    )
+    
+    # Filter by category if provided
+    if category_ids:
+        try:
+            uuid_list = [UUID(cid) for cid in category_ids]
+            query = query.filter(Expense.category_id.in_(uuid_list))
+        except (ValueError, TypeError):
+            pass  # Invalid UUID, ignore filter
+    elif category_id:
+        try:
+            query = query.filter(Expense.category_id == UUID(category_id))
+        except ValueError:
+            pass  # Invalid UUID, ignore filter
+    
+    # Get all expenses matching the filters
+    expenses = query.all()
+    
+    if not expenses:
+        return {
+            "period_type": period_type,
+            "period_value": period_value,
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "expenses": [],
+            "has_more": False,
+            "total_count": 0
+        }
+    
+    # Get unique currencies and fetch exchange rates
+    currencies = set(exp.currency for exp in expenses)
+    conversion_rates = {}
+    
+    # Fetch exchange rates for IDR conversion
+    for curr in currencies:
+        currency_upper = curr.upper()
+        if currency_upper == "IDR":
+            conversion_rates[currency_upper] = Decimal("1.0")
+        else:
+            try:
+                rates = await get_exchange_rates(currency_upper)
+                idr_rate = rates.get("IDR")
+                if idr_rate:
+                    conversion_rates[currency_upper] = Decimal(str(idr_rate))
+                else:
+                    # Fallback: try via USD
+                    usd_rate = rates.get("USD")
+                    if usd_rate and usd_rate > 0:
+                        usd_rates = await get_exchange_rates("USD")
+                        idr_from_usd = usd_rates.get("IDR", 1.0)
+                        conversion_rates[currency_upper] = Decimal(str(float(idr_from_usd) / float(usd_rate)))
+                    else:
+                        conversion_rates[currency_upper] = Decimal("1.0")
+            except Exception:
+                conversion_rates[currency_upper] = Decimal("1.0")
+    
+    # Calculate IDR amounts and create list with expenses
+    expenses_with_idr = []
+    for expense in expenses:
+        currency_upper = expense.currency.upper()
+        rate = conversion_rates.get(currency_upper, Decimal("1.0"))
+        amount_in_idr = Decimal(str(expense.amount)) * rate
+        
+        expenses_with_idr.append({
+            "expense": expense,
+            "amount_in_idr": float(amount_in_idr)
+        })
+    
+    # Sort by IDR amount descending
+    expenses_with_idr.sort(key=lambda x: x["amount_in_idr"], reverse=True)
+    
+    # Calculate total count before pagination
+    total_count = len(expenses_with_idr)
+    
+    # Apply pagination: skip and limit
+    paginated_expenses = expenses_with_idr[skip:skip + limit]
+    
+    # Check if there are more expenses
+    has_more = (skip + limit) < total_count
+    
+    # Convert to response format
+    from app.schemas.expense import ExpenseResponse
+    result_expenses = []
+    for item in paginated_expenses:
+        expense_dict = {
+            "id": str(item["expense"].id),
+            "amount": float(item["expense"].amount),
+            "currency": item["expense"].currency,
+            "description": item["expense"].description,
+            "category_id": str(item["expense"].category_id) if item["expense"].category_id else None,
+            "date": item["expense"].date.isoformat(),
+            "tags": item["expense"].tags if item["expense"].tags else [],
+            "payment_method": item["expense"].payment_method,
+            "receipt_url": item["expense"].receipt_url,
+            "location": item["expense"].location,
+            "notes": item["expense"].notes,
+            "is_recurring": item["expense"].is_recurring,
+            "created_at": item["expense"].created_at.isoformat() if item["expense"].created_at else None,
+            "updated_at": item["expense"].updated_at.isoformat() if item["expense"].updated_at else None,
+            "amount_in_idr": item["amount_in_idr"]
+        }
+        result_expenses.append(expense_dict)
+    
+    return {
+        "period_type": period_type,
+        "period_value": period_value,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "expenses": result_expenses,
+        "has_more": has_more,
+        "total_count": total_count
     }
