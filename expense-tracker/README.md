@@ -129,6 +129,37 @@ Frontend will be available at `http://localhost:5173`
 ### Backend
 - `DATABASE_URL`: Database connection string (default: SQLite)
 
+## Documentation
+
+### Importing Large Excel Files
+
+If you need to import large Excel files (5000+ transactions) and the production server times out, you can use the local import script to import directly from your local machine.
+
+**See [LOCAL_EXCEL_IMPORT.md](./LOCAL_EXCEL_IMPORT.md) for detailed instructions.**
+
+**Quick Example:**
+```bash
+# 1. Get public database URL from Railway:
+#    Railway Dashboard → PostgreSQL service → Networking tab
+#    Copy the public endpoint (e.g., switchyard.proxy.rlwy.net:51922)
+
+# 2. Set DATABASE_URL with public endpoint
+export DATABASE_URL="postgresql://postgres:PASSWORD@switchyard.proxy.rlwy.net:51922/railway"
+
+# 3. Run the import script
+cd backend
+poetry run python scripts/import_excel_local.py /path/to/file.xlsx
+```
+
+**Important:** Use the public endpoint from Railway's Networking tab (e.g., `switchyard.proxy.rlwy.net:PORT`), not the internal URL (`postgres.railway.internal`).
+
+### Additional Documentation
+
+- [Railway Deployment Guide](./RAILWAY_DEPLOYMENT_GUIDE.md) - Complete deployment guide
+- [Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md) - Google authentication setup
+- [Custom Domain Setup](./CUSTOM_DOMAIN_SETUP.md) - Setting up custom domains
+- [Local Excel Import](./LOCAL_EXCEL_IMPORT.md) - Import large Excel files locally
+
 ## License
 
 MIT

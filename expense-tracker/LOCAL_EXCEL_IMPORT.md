@@ -8,8 +8,8 @@ This guide explains how to import Excel files directly to your production databa
 # 1. Get PUBLIC database URL from Railway (NOT the internal one!)
 #    Railway → PostgreSQL service → "Connect" or "Public Networking" tab
 
-# 2. Set the public DATABASE_URL
-export DATABASE_URL="postgresql://user:pass@containers-xxx.railway.app:5432/railway"
+# 2. Set the public DATABASE_URL (use the public endpoint from Railway)
+export DATABASE_URL="postgresql://postgres:password@switchyard.proxy.rlwy.net:PORT/railway"
 
 # 3. Run the import
 cd expense-tracker/backend
@@ -49,16 +49,28 @@ For local imports, you need the **public database URL**, not the internal one.
 
 1. Go to [Railway Dashboard](https://railway.app)
 2. Select your **PostgreSQL database service** (not the backend service)
-3. Click on the **"Connect"** or **"Public Networking"** tab
-4. Look for **"Public Network"** or **"Connection String"** section
-5. Copy the public connection string
+3. Click on the **"Networking"** tab (or "Connect" tab)
+4. In the **"Public Networking"** section, you'll see a public endpoint like:
+   - `switchyard.proxy.rlwy.net:51922` (this proxies to internal port 5432)
+5. Copy the public endpoint (hostname and port)
+6. Construct your DATABASE_URL:
+   ```
+   postgresql://postgres:YOUR_PASSWORD@switchyard.proxy.rlwy.net:51922/railway
+   ```
+   Replace:
+   - `YOUR_PASSWORD` with your actual database password (from Variables tab)
+   - `51922` with your actual public port number
 
 The public URL will look like:
 ```
-postgresql://postgres:password@containers-us-west-xxx.railway.app:5432/railway
+postgresql://postgres:password@switchyard.proxy.rlwy.net:51922/railway
 ```
 
-**Note:** If you see `postgres.railway.internal` in the hostname, that's the internal URL and won't work from your local machine. You need to enable public networking or use the public connection string.
+**Important Notes:**
+- The hostname will be `switchyard.proxy.rlwy.net` (Railway's public proxy)
+- The port will be a random port number (e.g., `51922`) - this is different from the internal port 5432
+- If you see `postgres.railway.internal` in the hostname, that's the internal URL and won't work from your local machine
+- The public endpoint proxies to the internal PostgreSQL port (5432), so you use the public port shown in Railway
 
 ### Alternative: Get from PostgreSQL Service Variables
 
@@ -230,9 +242,9 @@ The script supports the same Excel format as the production import:
 
 If your Excel file has a "Categories" sheet, categories will be imported first:
 
-| ID | Name | Icon | Color | Is Default |
-|----|------|------|-------|------------|
-| ... | Food & Dining | 🍽️ | #FF6B6B | Yes |
+| ID  | Name          | Icon | Color   | Is Default |
+|-----|---------------|------|---------|------------|
+| ... | Food & Dining | 🍽️  | #FF6B6B | Yes        |
 
 ## Troubleshooting
 
@@ -244,13 +256,17 @@ If your Excel file has a "Categories" sheet, categories will be imported first:
 
 **Solutions:**
 1. **Get the public database URL:**
-   - Go to Railway → PostgreSQL service → "Connect" or "Public Networking" tab
-   - Use the public connection string (hostname should NOT contain `.railway.internal`)
+   - Go to Railway → PostgreSQL service → "Networking" tab
+   - In "Public Networking" section, copy the public endpoint (e.g., `switchyard.proxy.rlwy.net:51922`)
+   - Construct DATABASE_URL: `postgresql://postgres:PASSWORD@switchyard.proxy.rlwy.net:51922/railway`
+   - Replace `PASSWORD` with your database password (from Variables tab)
+   - Replace `51922` with your actual public port number
    - If public networking is disabled, enable it in Settings → Networking
 
 2. **Verify DATABASE_URL format:**
-   - ✅ Correct: `postgresql://user:pass@containers-xxx.railway.app:5432/railway`
-   - ❌ Wrong: `postgresql://user:pass@postgres.railway.internal:5432/railway`
+   - ✅ Correct: `postgresql://user:pass@switchyard.proxy.rlwy.net:51922/railway` (public endpoint)
+   - ❌ Wrong: `postgresql://user:pass@postgres.railway.internal:5432/railway` (internal only)
+   - ❌ Wrong: Using port 5432 with public endpoint (use the port shown in Railway, e.g., 51922)
 
 3. **Check database service status:**
    - Ensure PostgreSQL service is running in Railway
@@ -353,14 +369,14 @@ poetry run python scripts/import_excel_local.py \
 
 ## Comparison: Production vs Local Import
 
-| Feature | Production API | Local Script |
-|---------|---------------|--------------|
-| **Timeout** | 30-60 seconds | No timeout |
-| **Batch size** | 1 expense | 200 expenses |
-| **Speed** | ~1-2 sec/expense | ~0.1 sec/expense |
-| **Progress** | Limited | Real-time |
+| Feature            | Production API   | Local Script              |
+|--------------------|------------------|---------------------------|
+| **Timeout**        | 30-60 seconds    | No timeout                |
+| **Batch size**     | 1 expense        | 200 expenses              |
+| **Speed**          | ~1-2 sec/expense | ~0.1 sec/expense          |
+| **Progress**       | Limited          | Real-time                 |
 | **Error recovery** | Fails completely | Continues with next batch |
-| **Large files** | ❌ Times out | ✅ Handles easily |
+| **Large files**    | ❌ Times out      | ✅ Handles easily          |
 
 ## Need Help?
 

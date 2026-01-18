@@ -7,9 +7,10 @@ import { MIN_AMOUNT_OPTIONS, getDateRangeOptions, getDateRange, type DateRangePr
 interface ExpenseFiltersProps {
   filters: ExpenseFilters;
   onFiltersChange: (filters: ExpenseFilters) => void;
+  onClearFilters?: () => void;
 }
 
-const ExpenseFiltersComponent = ({ filters, onFiltersChange }: ExpenseFiltersProps) => {
+const ExpenseFiltersComponent = ({ filters, onFiltersChange, onClearFilters }: ExpenseFiltersProps) => {
   const [localFilters, setLocalFilters] = useState<ExpenseFilters>(filters);
   const lastSentFilters = useRef<ExpenseFilters>(filters);
   

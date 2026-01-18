@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { expensesApi } from '../services/api';
 import { toast } from 'react-hot-toast';
@@ -10,10 +10,38 @@ import type { ExpenseFilters as ExpenseFiltersType } from '../types';
 const EXPENSES_PER_PAGE = 500;
 
 const Expenses = () => {
-  const [baseFilters, setBaseFilters] = useState<Omit<ExpenseFiltersType, 'skip' | 'limit'>>({});
+  const [showFutureExpenses, setShowFutureExpenses] = useState(false);
+  const [userFilters, setUserFilters] = useState<Omit<ExpenseFiltersType, 'skip' | 'limit'>>({});
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  // Compute effective filters based on toggle state
+  const baseFilters = useMemo(() => {
+    const today = getTodayDateString();
+    
+    if (!showFutureExpenses) {
+      // Hide future expenses: ensure end_date is today or earlier
+      const userEndDate = userFilters.end_date;
+      const endDateToUse = userEndDate && userEndDate <= today ? userEndDate : today;
+      return { ...userFilters, end_date: endDateToUse };
+    } else {
+      // Show future expenses: use user's filters as-is (no end_date restriction)
+      return userFilters;
+    }
+  }, [showFutureExpenses, userFilters]);
+
+  // Initialize: hide future expenses by default
+  useEffect(() => {
+    const today = getTodayDateString();
+    setUserFilters({ end_date: today });
+  }, []);
 
   // Use infinite query for pagination
   const {
@@ -80,14 +108,50 @@ const Expenses = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <h2 className="text-2xl md:text-3xl font-bold text-primary-600">Explorer</h2>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-2xl md:text-3xl font-bold text-primary-600">Explorer</h2>
+        
+        {/* Toggle for showing/hiding future expenses */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-warm-gray-700">Show Future Expenses</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showFutureExpenses}
+            onClick={() => setShowFutureExpenses(!showFutureExpenses)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+              showFutureExpenses ? 'bg-primary-600' : 'bg-warm-gray-300'
+            }`}
+            title={showFutureExpenses ? 'Hide future expenses' : 'Show future expenses'}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
+                showFutureExpenses ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
 
       <ExpenseFilters
         filters={baseFilters}
         onFiltersChange={(newFilters) => {
           // Remove skip and limit from filters when they change
           const { skip, limit, ...rest } = newFilters;
-          setBaseFilters(rest);
+          
+          const today = getTodayDateString();
+          
+          // If user sets a future date while toggle is off, turn toggle on
+          if (!showFutureExpenses && rest.end_date && rest.end_date > today) {
+            setShowFutureExpenses(true);
+          }
+          
+          // Update user filters (baseFilters will be recomputed via useMemo)
+          setUserFilters(rest);
+        }}
+        onClearFilters={() => {
+          // When filters are cleared, toggle "Show Future Expenses" to ON
+          setShowFutureExpenses(true);
         }}
       />
 
