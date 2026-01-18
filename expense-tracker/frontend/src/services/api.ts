@@ -307,6 +307,10 @@ export const historyApi = {
     const response = await api.get<ExpenseHistory[]>('/history', { params });
     return response.data;
   },
+  getUniqueUsernames: async (): Promise<string[]> => {
+    const response = await api.get<string[]>('/history/users');
+    return response.data;
+  },
 };
 
 export default api;

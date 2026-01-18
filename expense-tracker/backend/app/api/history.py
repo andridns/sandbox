@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import distinct
 from typing import Optional, List
 from datetime import datetime
 
@@ -29,7 +30,8 @@ async def get_expense_history(
         query = query.filter(ExpenseHistory.action == action)
     
     if username:
-        query = query.filter(ExpenseHistory.username.ilike(f"%{username}%"))
+        # Exact match for dropdown selection
+        query = query.filter(ExpenseHistory.username == username)
     
     # Order by created_at descending (most recent first)
     query = query.order_by(ExpenseHistory.created_at.desc())
@@ -37,3 +39,13 @@ async def get_expense_history(
     # Pagination
     history = query.offset(skip).limit(limit).all()
     return history
+
+
+@router.get("/history/users", response_model=List[str])
+async def get_unique_usernames(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get list of unique usernames from expense history"""
+    usernames = db.query(distinct(ExpenseHistory.username)).order_by(ExpenseHistory.username).all()
+    return [username[0] for username in usernames if username[0]]
