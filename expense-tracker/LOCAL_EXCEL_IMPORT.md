@@ -231,7 +231,6 @@ The script supports the same Excel format as the production import:
 ### Optional Columns
 
 - **Category** - Category name (will be matched automatically)
-- **Payment Method** - e.g., "Cash", "Credit Card", "GoPay"
 - **Location** - Location of expense
 - **Notes** - Additional notes
 - **Tags** - Comma-separated tags

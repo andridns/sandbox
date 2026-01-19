@@ -61,10 +61,12 @@ backend/
 
 > **Note**: See `.env.example` for a complete list of all environment variables with descriptions and examples.
 
+### Database
 - `DATABASE_URL`: Database connection string (default: SQLite)
   - Development: `sqlite:///./expense_tracker.db`
   - Production: PostgreSQL connection string
 
+### Authentication & Security
 - `DEFAULT_USERNAME`: Default admin username (default: "admin")
   - Set this to change the default admin username
   - On startup, the system will create or update the user with this username
@@ -88,6 +90,21 @@ backend/
   - Example: `user1@example.com,user2@example.com`
   - Only these emails will be able to sign in via Google OAuth
   - If not set, all Google-authenticated users will be allowed (not recommended for production)
+
+### Server Configuration
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+  - Example: `http://localhost:5173,https://your-frontend.railway.app`
+  - If not set, defaults to `*` (allows all origins) in development mode
+  - **Important**: Set this in production to restrict CORS access
+
+- `PORT`: Server port number (default: 8000)
+  - Railway and other platforms may override this automatically
+  - Set explicitly if needed: `PORT=8000`
+
+- `ENVIRONMENT`: Environment name (optional)
+  - Set to `production` for production environment
+  - Used for environment-specific behavior (e.g., disabling debug endpoints)
+  - Railway automatically sets `RAILWAY_ENVIRONMENT_NAME` which is also checked
 
 ### Configuring Credentials in Railway
 
@@ -163,11 +180,33 @@ poetry run python scripts/seed_data.py
 
 All endpoints are prefixed with `/api/v1/`
 
+### Authentication
+- **Auth**: `/auth/login`, `/auth/logout`, `/auth/google`, `/auth/me`, `/auth/debug`
+
+### Expenses
 - **Expenses**: `/expenses` (GET, POST, PUT, DELETE)
+- **Expense History**: `/history` (GET), `/history/users` (GET)
+
+### Categories
 - **Categories**: `/categories` (GET, POST, PUT, DELETE)
+
+### Budgets
 - **Budgets**: `/budgets` (GET, POST, PUT, DELETE)
-- **Reports**: `/reports/summary`, `/reports/trends`, `/reports/category-breakdown`
-- **Export**: `/export/csv`, `/export/excel`, `/export/pdf`
-- **Tags**: `/tags/suggestions`
-- **Upload**: `/upload/receipt`
-- **Backup**: `/backup/create`, `/backup/list`
+- **Budget Details**: `/budgets/{budget_id}` (GET), `/budgets/{budget_id}/spent` (GET)
+
+### Reports & Analytics
+- **Reports**: `/reports/summary`, `/reports/trends`, `/reports/category-breakdown`, `/reports/top-expenses`
+
+### Export
+- **Export**: `/export/csv`, `/export/excel`, `/export/pdf`, `/export/count`
+
+### Import
+- **Import**: `/import/excel` (POST)
+
+### Other Features
+- **Tags**: `/tags/suggestions` (GET)
+- **Upload**: `/upload/receipt` (POST)
+- **Backup**: `/backup/create` (POST), `/backup/list` (GET)
+- **Currency**: `/currency/convert` (GET)
+- **Admin**: `/admin/delete-all` (DELETE) - Backend endpoint only (no UI)
+- **Seed**: `/seed` (POST) - Development only

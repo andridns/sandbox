@@ -9,12 +9,34 @@ Frontend application for the Expense Tracker built with React, TypeScript, and V
 npm install
 ```
 
-2. Start the development server:
+2. Configure environment variables (optional for local development):
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env if you need to customize API URL or Google OAuth
+# See .env.example for all available options
+```
+
+3. Start the development server:
 ```bash
 npm run dev
 ```
 
 The application will be available at `http://localhost:5173`
+
+## Environment Variables
+
+> **Note**: See `.env.example` for a complete list of all environment variables with descriptions and examples.
+
+- `VITE_API_URL`: Backend API base URL (default: `http://localhost:8000/api/v1`)
+  - Development: `http://localhost:8000/api/v1`
+  - Production: `https://your-backend.railway.app/api/v1`
+
+- `VITE_GOOGLE_CLIENT_ID`: Google OAuth Client ID (required for Google Sign-In)
+  - Get from [Google Cloud Console](https://console.cloud.google.com/)
+  - Must match the `GOOGLE_CLIENT_ID` set in the backend
+  - See [Google OAuth Setup](../GOOGLE_OAUTH_SETUP.md) for detailed instructions
 
 ## Build
 

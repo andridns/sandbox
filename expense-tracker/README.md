@@ -4,12 +4,12 @@ A comprehensive full-stack expense tracking application built with FastAPI (Pyth
 
 ## Features
 
-- **Expense Management**: Track expenses with detailed information including amount, description, category, tags, payment method, receipt photos, location, notes, and recurring flag
-- **Multi-Currency Support**: Support for IDR (primary) and other currencies
-- **Indonesian Payment Methods**: Cash, Debit Card, Credit Card, GoPay, OVO, DANA, LinkAja, ShopeePay
+- **Expense Management**: Track expenses with detailed information including amount, description, category, tags, receipt photos, location, notes, and recurring flag
+- **Multi-Currency Support**: Support for IDR (primary) and other currencies with automatic conversion
 - **Budget Tracking**: Set and track both category budgets and total monthly/yearly budgets
 - **Comprehensive Dashboard**: View summaries, charts, and budget progress
-- **Advanced Filtering**: Filter expenses by category, date range, tags, payment method, amount range, and search
+- **Advanced Filtering**: Filter expenses by category, date range, tags, amount range, and search
+- **Expense History**: Track all changes to expenses with audit log
 - **Reports & Analytics**: Monthly/yearly summaries, category breakdowns, and spending trends
 - **Export**: Export data to CSV, Excel, or PDF
 - **PWA Support**: Progressive Web App with offline viewing capability

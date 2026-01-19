@@ -161,12 +161,18 @@ Railway provides free `.railway.app` domains by default. To use a custom domain:
 | `DATABASE_URL`    | PostgreSQL connection string | `postgresql://user:pass@host:port/db` |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins | `https://frontend.railway.app`        |
 | `PORT`            | Server port (default: 8000)  | `8000`                                |
+| `DEFAULT_USERNAME`| Admin username (default: "admin") | `admin` |
+| `DEFAULT_PASSWORD`| Admin password (default: "23052020") | `YourSecurePassword123!` |
+| `SECRET_KEY`      | JWT secret key (auto-generated if not set) | `generated-secret-key` |
+| `GOOGLE_CLIENT_ID`| Google OAuth Client ID | `xxxxx.apps.googleusercontent.com` |
+| `ALLOWED_EMAILS`  | Comma-separated allowed emails for Google OAuth | `user1@gmail.com,user2@gmail.com` |
 
 ### Frontend Variables
 
 | Variable       | Description                           | Example                              |
 |----------------|---------------------------------------|--------------------------------------|
 | `VITE_API_URL` | Backend API base URL                  | `https://backend.railway.app/api/v1` |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID (same as backend) | `xxxxx.apps.googleusercontent.com` |
 | `BACKEND_URL`  | Backend service URL (for nginx proxy) | `https://backend.railway.app`        |
 
 ## Troubleshooting

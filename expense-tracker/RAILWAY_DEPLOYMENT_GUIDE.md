@@ -220,14 +220,18 @@ After deployment, verify:
 ### Environment Variables
 
 **Backend:**
-- `DATABASE_URL` - From PostgreSQL service
-- `ALLOWED_ORIGINS` - Your frontend URL
-- `PORT` - 8000
+- `DATABASE_URL` - From PostgreSQL service (required)
+- `ALLOWED_ORIGINS` - Your frontend URL (comma-separated if multiple)
+- `PORT` - 8000 (default, Railway may override)
 - `DEFAULT_USERNAME` - Admin username (default: "admin")
 - `DEFAULT_PASSWORD` - Admin password (⚠️ **Set a strong password!**)
+- `SECRET_KEY` - JWT secret key (auto-generated if not set, but recommended for production)
+- `GOOGLE_CLIENT_ID` - Google OAuth Client ID (required for Google Sign-In)
+- `ALLOWED_EMAILS` - Comma-separated list of allowed emails for Google OAuth
 
 **Frontend:**
 - `VITE_API_URL` - Your backend URL + `/api/v1`
+- `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID (same as backend, required for Google Sign-In)
 
 ### Updating Admin Password in Production
 
