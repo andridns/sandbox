@@ -33,6 +33,7 @@ const QuickExpenseForm = () => {
   const [input, setInput] = useState('');
   const [currency, setCurrency] = useState('IDR');
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [showOtherCurrencies, setShowOtherCurrencies] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,7 @@ const QuickExpenseForm = () => {
       queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
       setInput('');
       setCurrency('IDR');
+      setDate(new Date().toISOString().split('T')[0]);
       // Reset to "Other" category
       const otherCategory = categories?.find(cat => cat.name === 'Other');
       setCategoryId(otherCategory?.id || null);
@@ -88,7 +90,7 @@ const QuickExpenseForm = () => {
       currency: currency,
       description: parsed.description || 'Expense',
       category_id: categoryId,
-      date: new Date().toISOString().split('T')[0],
+      date: date,
       tags: [],
       is_recurring: false,
     });
@@ -254,6 +256,19 @@ const QuickExpenseForm = () => {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Date Selection */}
+          <div className="mb-3">
+            <label className="block text-xs md:text-sm font-medium text-warm-gray-700 mb-2">
+              Date
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-3 py-2 md:px-4 md:py-2.5 border-2 border-modern-border/50 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white text-modern-text transition-all text-sm md:text-base shadow-modern"
+            />
           </div>
 
           {/* Category Selection Buttons */}
