@@ -6,7 +6,7 @@ import { formatDate } from '../utils/format';
 import CurrencyDisplay from '../components/CurrencyDisplay';
 import RentExpenseTrendChart from '../components/RentExpenses/RentExpenseTrendChart';
 import RentExpenseFilters from '../components/RentExpenses/RentExpenseFilters';
-import RentExpenseTable from '../components/RentExpenses/RentExpenseTable';
+import RentExpenseDetailCard from '../components/RentExpenses/RentExpenseDetailCard';
 import type { Category, Expense, RentExpenseCategory } from '../types';
 
 type PeriodType = 'monthly' | 'quarterly' | 'yearly';
@@ -66,12 +66,13 @@ const Reports = () => {
     },
   });
 
-  const { data: rentExpenses, error: rentExpensesError, isLoading: isLoadingRentExpenses } = useQuery({
-    queryKey: ['rentExpenses', selectedRentPeriod],
-    queryFn: () => rentExpensesApi.getAll(selectedRentPeriod || undefined),
-    enabled: activeTab === 'rent',
+  // Fetch specific period's expense when selected
+  const { data: selectedPeriodExpense, error: rentExpensesError, isLoading: isLoadingRentExpenses } = useQuery({
+    queryKey: ['rentExpense', selectedRentPeriod],
+    queryFn: () => rentExpensesApi.getByPeriod(selectedRentPeriod!),
+    enabled: activeTab === 'rent' && selectedRentPeriod !== null,
     onError: (error) => {
-      console.error('Error fetching rent expenses:', error);
+      console.error('Error fetching rent expense:', error);
     },
   });
 
@@ -229,15 +230,6 @@ const Reports = () => {
     setSelectedRentCategories([]);
   };
 
-  // Filter rent expenses by selected categories
-  const filteredRentExpenses = useMemo(() => {
-    if (!rentExpenses) return [];
-    if (selectedRentCategories.length === 0) return rentExpenses;
-    
-    // For now, return all expenses. Category filtering would require backend changes
-    // or client-side filtering based on breakdown data
-    return rentExpenses;
-  }, [rentExpenses, selectedRentCategories]);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -605,13 +597,33 @@ const Reports = () => {
             onDataPointClick={handleDataPointClick}
           />
 
-          {/* Rent Expenses Table */}
-          <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
-            <h3 className="text-lg md:text-xl font-semibold text-warm-gray-800 mb-4">
-              Monthly Rent Expenses
-            </h3>
-            <RentExpenseTable expenses={filteredRentExpenses || []} />
-          </div>
+          {/* Rent Expense Detail Card */}
+          {selectedRentPeriod ? (
+            isLoadingRentExpenses ? (
+              <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
+                <div className="text-center py-8">
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-8 bg-gradient-to-r from-modern-border/20 to-modern-border/10 rounded-xl w-1/3 mx-auto"></div>
+                    <div className="h-64 bg-gradient-to-r from-modern-border/20 to-modern-border/10 rounded-xl"></div>
+                  </div>
+                </div>
+              </div>
+            ) : selectedPeriodExpense ? (
+              <RentExpenseDetailCard expense={selectedPeriodExpense} />
+            ) : (
+              <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
+                <div className="text-center py-8 text-modern-text-light text-sm">
+                  No rent expense data found for period {selectedRentPeriod}
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
+              <div className="text-center py-8 text-modern-text-light text-sm">
+                Click on a data point in the chart above to view detailed breakdown for that period.
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
