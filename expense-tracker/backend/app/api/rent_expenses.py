@@ -42,31 +42,22 @@ async def get_rent_expenses(
 async def get_rent_expense_trends(
     period_type: Optional[str] = Query("monthly", description="Period type: 'monthly' or 'yearly'"),
     categories: Optional[List[str]] = Query(None, description="Filter by categories (electricity, water, service_charge, sinking_fund, fitout)"),
+    usage_view: Optional[str] = Query("cost", description="View type: 'cost', 'electricity_usage', or 'water_usage'"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get rent expense trends grouped by period, optionally filtered by categories"""
+    """Get rent expense trends grouped by period, optionally filtered by categories or showing usage data"""
     
-    # Build the sum expression based on selected categories
-    if categories and len(categories) > 0:
-        # Calculate sum based on selected categories - calculate in Python for flexibility
-        # Get all expenses and calculate per row
-        all_expenses = db.query(RentExpense).all()
-        
-        # Group by period and calculate totals
+    # Get all expenses
+    all_expenses = db.query(RentExpense).all()
+    
+    # Handle usage views (electricity kWh or water m³)
+    if usage_view == "electricity_usage":
+        # Show electricity usage in kWh
         period_totals = {}
         for expense in all_expenses:
-            total = 0.0
-            if 'electricity' in categories:
-                total += float(expense.electric_m1_total_idr or 0)
-            if 'water' in categories:
-                total += float(expense.water_m1_total_idr or 0)
-            if 'service_charge' in categories:
-                total += float(expense.service_charge_idr or 0) + float(expense.ppn_service_charge_idr or 0)
-            if 'sinking_fund' in categories:
-                total += float(expense.sinking_fund_idr or 0)
-            if 'fitout' in categories:
-                total += float(expense.fitout_idr or 0)
+            if expense.electric_kwh is None:
+                continue  # Skip if no usage data
             
             if period_type == "yearly":
                 period_key = expense.period[:4]  # Extract year
@@ -75,9 +66,8 @@ async def get_rent_expense_trends(
             
             if period_key not in period_totals:
                 period_totals[period_key] = 0.0
-            period_totals[period_key] += total
+            period_totals[period_key] += float(expense.electric_kwh)
         
-        # Convert to trends list
         trends = []
         for period_key in sorted(period_totals.keys()):
             trends.append({
@@ -89,40 +79,108 @@ async def get_rent_expense_trends(
             "period_type": period_type,
             "trends": trends
         }
-    else:
-        # No categories selected, use total
-        if period_type == "yearly":
-            # Group by year - extract first 4 characters of period
-            year_expr = func.substr(RentExpense.period, 1, 4).label('year')
-            results = db.query(
-                year_expr,
-                func.sum(RentExpense.total_idr).label('total')
-            ).group_by(year_expr).order_by(year_expr).all()
+    
+    elif usage_view == "water_usage":
+        # Show water usage in m³
+        period_totals = {}
+        for expense in all_expenses:
+            if expense.water_m3 is None:
+                continue  # Skip if no usage data
             
-            trends = []
-            for result in results:
-                trends.append({
-                    "period": str(result.year),
-                    "total": float(result.total or 0)
-                })
-        else:  # monthly
-            # Group by month (period is already in YYYY-MM format)
-            results = db.query(
-                RentExpense.period,
-                func.sum(RentExpense.total_idr).label('total')
-            ).group_by(RentExpense.period).order_by(RentExpense.period).all()
+            if period_type == "yearly":
+                period_key = expense.period[:4]  # Extract year
+            else:
+                period_key = expense.period
             
-            trends = []
-            for result in results:
-                trends.append({
-                    "period": result.period,
-                    "total": float(result.total or 0)
-                })
+            if period_key not in period_totals:
+                period_totals[period_key] = 0.0
+            period_totals[period_key] += float(expense.water_m3)
+        
+        trends = []
+        for period_key in sorted(period_totals.keys()):
+            trends.append({
+                "period": period_key,
+                "total": period_totals[period_key]
+            })
         
         return {
             "period_type": period_type,
             "trends": trends
         }
+    
+    else:
+        # Cost view - build the sum expression based on selected categories
+        if categories and len(categories) > 0:
+            # Calculate sum based on selected categories
+            period_totals = {}
+            for expense in all_expenses:
+                total = 0.0
+                if 'electricity' in categories:
+                    total += float(expense.electric_m1_total_idr or 0)
+                if 'water' in categories:
+                    total += float(expense.water_m1_total_idr or 0)
+                if 'service_charge' in categories:
+                    total += float(expense.service_charge_idr or 0) + float(expense.ppn_service_charge_idr or 0)
+                if 'sinking_fund' in categories:
+                    total += float(expense.sinking_fund_idr or 0)
+                if 'fitout' in categories:
+                    total += float(expense.fitout_idr or 0)
+                
+                if period_type == "yearly":
+                    period_key = expense.period[:4]  # Extract year
+                else:
+                    period_key = expense.period
+                
+                if period_key not in period_totals:
+                    period_totals[period_key] = 0.0
+                period_totals[period_key] += total
+            
+            # Convert to trends list
+            trends = []
+            for period_key in sorted(period_totals.keys()):
+                trends.append({
+                    "period": period_key,
+                    "total": period_totals[period_key]
+                })
+            
+            return {
+                "period_type": period_type,
+                "trends": trends
+            }
+        else:
+            # No categories selected, use total
+            if period_type == "yearly":
+                # Group by year - extract first 4 characters of period
+                year_expr = func.substr(RentExpense.period, 1, 4).label('year')
+                results = db.query(
+                    year_expr,
+                    func.sum(RentExpense.total_idr).label('total')
+                ).group_by(year_expr).order_by(year_expr).all()
+                
+                trends = []
+                for result in results:
+                    trends.append({
+                        "period": str(result.year),
+                        "total": float(result.total or 0)
+                    })
+            else:  # monthly
+                # Group by month (period is already in YYYY-MM format)
+                results = db.query(
+                    RentExpense.period,
+                    func.sum(RentExpense.total_idr).label('total')
+                ).group_by(RentExpense.period).order_by(RentExpense.period).all()
+                
+                trends = []
+                for result in results:
+                    trends.append({
+                        "period": result.period,
+                        "total": float(result.total or 0)
+                    })
+            
+            return {
+                "period_type": period_type,
+                "trends": trends
+            }
 
 
 @router.get("/rent-expenses/breakdown", response_model=RentExpenseBreakdown)

@@ -28,10 +28,11 @@ ChartJS.register(
 interface RentExpenseTrendChartProps {
   data?: RentExpenseTrend;
   title?: string;
+  usageView?: 'cost' | 'electricity_usage' | 'water_usage';
   onDataPointClick?: (period: string) => void;
 }
 
-const RentExpenseTrendChart = ({ data, title = "Rent Expense Trends", onDataPointClick }: RentExpenseTrendChartProps) => {
+const RentExpenseTrendChart = ({ data, title = "Rent Expense Trends", usageView = 'cost', onDataPointClick }: RentExpenseTrendChartProps) => {
   const chartRef = useRef<ChartJS<'line', number[], string>>(null);
 
   if (!data || !data.trends || data.trends.length === 0) {
@@ -45,11 +46,18 @@ const RentExpenseTrendChart = ({ data, title = "Rent Expense Trends", onDataPoin
     );
   }
 
+  // Determine label and unit based on usage view
+  const getLabel = () => {
+    if (usageView === 'electricity_usage') return 'Electricity Usage (kWh)';
+    if (usageView === 'water_usage') return 'Water Usage (m³)';
+    return 'Total Rent Expense';
+  };
+
   const chartData = {
     labels: data.trends.map((item) => item.period),
     datasets: [
       {
-        label: 'Total Rent Expense',
+        label: getLabel(),
         data: data.trends.map((item) => item.total),
         borderColor: '#10b981', // Green
         backgroundColor: 'rgba(16, 185, 129, 0.1)', // Light green
@@ -73,7 +81,8 @@ const RentExpenseTrendChart = ({ data, title = "Rent Expense Trends", onDataPoin
       intersect: false,
     },
     onClick: (_event, elements) => {
-      if (elements && elements.length > 0 && onDataPointClick) {
+      // Only allow clicking when in cost view
+      if (usageView === 'cost' && elements && elements.length > 0 && onDataPointClick) {
         const element = elements[0];
         const index = element.index;
         const labels = chartData.labels;
@@ -90,10 +99,16 @@ const RentExpenseTrendChart = ({ data, title = "Rent Expense Trends", onDataPoin
         callbacks: {
           label: (context: any) => {
             const value = context.parsed.y || 0;
-            return `Total: ${new Intl.NumberFormat('id-ID', {
-              style: 'currency',
-              currency: 'IDR',
-            }).format(value)}`;
+            if (usageView === 'electricity_usage') {
+              return `Usage: ${value.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kWh`;
+            } else if (usageView === 'water_usage') {
+              return `Usage: ${value.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m³`;
+            } else {
+              return `Total: ${new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+              }).format(value)}`;
+            }
           },
         },
       },
@@ -122,11 +137,17 @@ const RentExpenseTrendChart = ({ data, title = "Rent Expense Trends", onDataPoin
         beginAtZero: true,
         ticks: {
           callback: (value: any) => {
-            return new Intl.NumberFormat('id-ID', {
-              style: 'currency',
-              currency: 'IDR',
-              notation: 'compact',
-            }).format(value);
+            if (usageView === 'electricity_usage') {
+              return `${value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} kWh`;
+            } else if (usageView === 'water_usage') {
+              return `${value.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m³`;
+            } else {
+              return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                notation: 'compact',
+              }).format(value);
+            }
           },
         },
       },

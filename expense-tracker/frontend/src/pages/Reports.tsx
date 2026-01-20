@@ -34,6 +34,7 @@ const Reports = () => {
   const [rentPeriodType, setRentPeriodType] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedRentCategories, setSelectedRentCategories] = useState<RentExpenseCategory[]>([]);
   const [selectedRentPeriod, setSelectedRentPeriod] = useState<string | null>(null);
+  const [rentUsageView, setRentUsageView] = useState<'cost' | 'electricity_usage' | 'water_usage'>('cost');
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -55,10 +56,12 @@ const Reports = () => {
 
   // Rent Expenses Queries
   const { data: rentTrends, error: rentTrendsError, isLoading: isLoadingRentTrends } = useQuery({
-    queryKey: ['rentTrends', rentPeriodType, selectedRentCategories],
+    queryKey: ['rentTrends', rentPeriodType, selectedRentCategories, rentUsageView],
     queryFn: () => rentExpensesApi.getTrends(
       rentPeriodType,
-      selectedRentCategories.length > 0 ? selectedRentCategories : undefined
+      // Only pass categories if in cost view
+      rentUsageView === 'cost' && selectedRentCategories.length > 0 ? selectedRentCategories : undefined,
+      rentUsageView
     ),
     enabled: activeTab === 'rent',
     onError: (error) => {
@@ -228,6 +231,14 @@ const Reports = () => {
 
   const handleClearRentCategories = () => {
     setSelectedRentCategories([]);
+  };
+
+  const handleUsageViewChange = (view: 'cost' | 'electricity_usage' | 'water_usage') => {
+    setRentUsageView(view);
+    // Reset selected period when switching to usage view since usage data points may not be clickable
+    if (view !== 'cost') {
+      setSelectedRentPeriod(null);
+    }
   };
 
 
@@ -569,9 +580,11 @@ const Reports = () => {
           <RentExpenseFilters
             periodType={rentPeriodType}
             selectedCategories={selectedRentCategories}
+            usageView={rentUsageView}
             onPeriodTypeChange={setRentPeriodType}
             onCategoryToggle={handleRentCategoryToggle}
             onClearCategories={handleClearRentCategories}
+            onUsageViewChange={handleUsageViewChange}
           />
 
           {/* Error Messages */}
@@ -593,12 +606,13 @@ const Reports = () => {
           {/* Trend Chart */}
           <RentExpenseTrendChart
             data={rentTrends}
+            usageView={rentUsageView}
             title={`Rent Expense Trends${selectedRentCategories.length > 0 ? ` - ${selectedRentCategories.map(c => c.charAt(0).toUpperCase() + c.slice(1).replace('_', ' ')).join(', ')}` : ''}`}
             onDataPointClick={handleDataPointClick}
           />
 
-          {/* Rent Expense Detail Card */}
-          {selectedRentPeriod ? (
+          {/* Rent Expense Detail Card - Only show in cost view */}
+          {rentUsageView === 'cost' && selectedRentPeriod ? (
             isLoadingRentExpenses ? (
               <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
                 <div className="text-center py-8">
@@ -617,13 +631,13 @@ const Reports = () => {
                 </div>
               </div>
             )
-          ) : (
+          ) : rentUsageView === 'cost' ? (
             <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
               <div className="text-center py-8 text-modern-text-light text-sm">
                 Click on a data point in the chart above to view detailed breakdown for that period.
               </div>
             </div>
-          )}
+          ) : null}
         </>
       )}
     </div>

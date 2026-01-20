@@ -191,15 +191,6 @@ const RentExpenseDetailCard = ({ expense }: RentExpenseDetailCardProps) => {
             </div>
           </div>
         )}
-
-        {/* Source Info */}
-        {expense.source && (
-          <div className="pt-4 border-t border-modern-border/20">
-            <p className="text-xs text-warm-gray-500">
-              Source: {expense.source}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
