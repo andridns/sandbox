@@ -7,7 +7,7 @@ import CurrencyDisplay from '../components/CurrencyDisplay';
 import RentExpenseTrendChart from '../components/RentExpenses/RentExpenseTrendChart';
 import RentExpenseFilters from '../components/RentExpenses/RentExpenseFilters';
 import RentExpenseDetailCard from '../components/RentExpenses/RentExpenseDetailCard';
-import type { Category, Expense, RentExpenseCategory } from '../types';
+import type { Category, Expense, RentExpenseCategory, RentExpenseTrend, RentExpense } from '../types';
 
 type PeriodType = 'monthly' | 'quarterly' | 'yearly';
 type TabType = 'daily' | 'rent';
@@ -55,7 +55,7 @@ const Reports = () => {
   });
 
   // Rent Expenses Queries
-  const { data: rentTrends, error: rentTrendsError, isLoading: isLoadingRentTrends } = useQuery({
+  const { data: rentTrends, error: rentTrendsError, isLoading: isLoadingRentTrends } = useQuery<RentExpenseTrend>({
     queryKey: ['rentTrends', rentPeriodType, selectedRentCategories, rentUsageView],
     queryFn: () => rentExpensesApi.getTrends(
       rentPeriodType,
@@ -64,19 +64,13 @@ const Reports = () => {
       rentUsageView
     ),
     enabled: activeTab === 'rent',
-    onError: (error) => {
-      console.error('Error fetching rent trends:', error);
-    },
   });
 
   // Fetch specific period's expense when selected
-  const { data: selectedPeriodExpense, error: rentExpensesError, isLoading: isLoadingRentExpenses } = useQuery({
+  const { data: selectedPeriodExpense, error: rentExpensesError, isLoading: isLoadingRentExpenses } = useQuery<RentExpense>({
     queryKey: ['rentExpense', selectedRentPeriod],
     queryFn: () => rentExpensesApi.getByPeriod(selectedRentPeriod!),
-    enabled: activeTab === 'rent' && selectedRentPeriod !== null,
-    onError: (error) => {
-      console.error('Error fetching rent expense:', error);
-    },
+    enabled: activeTab === 'rent' && selectedRentPeriod !== null && rentUsageView === 'cost',
   });
 
   // Reset accumulated expenses when filters change
@@ -604,12 +598,14 @@ const Reports = () => {
           )}
 
           {/* Trend Chart */}
-          <RentExpenseTrendChart
-            data={rentTrends}
-            usageView={rentUsageView}
-            title={`Rent Expense Trends${selectedRentCategories.length > 0 ? ` - ${selectedRentCategories.map(c => c.charAt(0).toUpperCase() + c.slice(1).replace('_', ' ')).join(', ')}` : ''}`}
-            onDataPointClick={handleDataPointClick}
-          />
+          {rentTrends && (
+            <RentExpenseTrendChart
+              data={rentTrends}
+              usageView={rentUsageView}
+              title={`Rent Expense Trends${selectedRentCategories.length > 0 ? ` - ${selectedRentCategories.map(c => c.charAt(0).toUpperCase() + c.slice(1).replace('_', ' ')).join(', ')}` : ''}`}
+              onDataPointClick={handleDataPointClick}
+            />
+          )}
 
           {/* Rent Expense Detail Card - Only show in cost view */}
           {rentUsageView === 'cost' && selectedRentPeriod ? (

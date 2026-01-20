@@ -81,11 +81,11 @@ const RentExpenseDetailCard = ({ expense }: RentExpenseDetailCardProps) => {
                 </span>
               </div>
             )}
-            {expense.electric_tarif_per_kwh !== null && (
+            {expense.electric_tarif_per_kwh !== null && expense.electric_tarif_per_kwh !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-warm-gray-600">Tariff per kWh</span>
                 <CurrencyDisplay 
-                  amount={typeof expense.electric_tarif_per_kwh === 'number' ? expense.electric_tarif_per_kwh : parseFloat(expense.electric_tarif_per_kwh.toString())} 
+                  amount={typeof expense.electric_tarif_per_kwh === 'number' ? expense.electric_tarif_per_kwh : Number(expense.electric_tarif_per_kwh)} 
                   currency="IDR" 
                   size="sm" 
                 />
@@ -133,11 +133,11 @@ const RentExpenseDetailCard = ({ expense }: RentExpenseDetailCardProps) => {
                 </span>
               </div>
             )}
-            {expense.water_tarif_per_m3 !== null && (
+            {expense.water_tarif_per_m3 !== null && expense.water_tarif_per_m3 !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-warm-gray-600">Tariff per m³</span>
                 <CurrencyDisplay 
-                  amount={typeof expense.water_tarif_per_m3 === 'number' ? expense.water_tarif_per_m3 : parseFloat(expense.water_tarif_per_m3.toString())} 
+                  amount={typeof expense.water_tarif_per_m3 === 'number' ? expense.water_tarif_per_m3 : Number(expense.water_tarif_per_m3)} 
                   currency="IDR" 
                   size="sm" 
                 />
