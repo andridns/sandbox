@@ -33,12 +33,12 @@ const ExpenseForm = ({ expenseId, onClose, onSuccess }: ExpenseFormProps) => {
     queryFn: () => categoriesApi.getAll(),
   });
 
-  // Set "Other" category as default when categories load (only for new expenses)
+  // Set "Food & Dining" category as default when categories load (only for new expenses)
   useEffect(() => {
     if (!expenseId && categories && categories.length > 0) {
-      const otherCategory = categories.find(cat => cat.name === 'Other');
-      if (otherCategory && !formData.category_id) {
-        setFormData(prev => ({ ...prev, category_id: otherCategory.id }));
+      const foodDiningCategory = categories.find(cat => cat.name === 'Food & Dining');
+      if (foodDiningCategory && !formData.category_id) {
+        setFormData(prev => ({ ...prev, category_id: foodDiningCategory.id }));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -44,12 +44,12 @@ const QuickExpenseForm = () => {
     queryFn: () => categoriesApi.getAll(),
   });
 
-  // Set "Other" category as default when categories load
+  // Set "Food & Dining" category as default when categories load
   useEffect(() => {
     if (categories && categories.length > 0 && !categoryId) {
-      const otherCategory = categories.find(cat => cat.name === 'Other');
-      if (otherCategory) {
-        setCategoryId(otherCategory.id);
+      const foodDiningCategory = categories.find(cat => cat.name === 'Food & Dining');
+      if (foodDiningCategory) {
+        setCategoryId(foodDiningCategory.id);
       }
     }
   }, [categories, categoryId]);
@@ -63,9 +63,9 @@ const QuickExpenseForm = () => {
       setInput('');
       setCurrency('IDR');
       setDate(new Date().toISOString().split('T')[0]);
-      // Reset to "Other" category
-      const otherCategory = categories?.find(cat => cat.name === 'Other');
-      setCategoryId(otherCategory?.id || null);
+      // Reset to "Food & Dining" category
+      const foodDiningCategory = categories?.find(cat => cat.name === 'Food & Dining');
+      setCategoryId(foodDiningCategory?.id || null);
       toast.success('Expense added!');
       inputRef.current?.focus();
     },
