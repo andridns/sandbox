@@ -15,31 +15,60 @@ FRONTEND_DIR="$SCRIPT_DIR/frontend"
 # PID files
 BACKEND_PID_FILE="/tmp/expense-tracker-backend.pid"
 FRONTEND_PID_FILE="/tmp/expense-tracker-frontend.pid"
+POSTGRES_STARTED_FILE="/tmp/expense-tracker-postgres-started.flag"
+POSTGRES_WAS_RUNNING_FILE="/tmp/expense-tracker-postgres-was-running.flag"
+CLEANUP_DONE_FILE="/tmp/expense-tracker-cleanup-done.flag"
+
+# Flag to track if we started PostgreSQL
+POSTGRES_STARTED_BY_SCRIPT=false
 
 # Cleanup function
 cleanup() {
+    # Prevent cleanup from running twice
+    if [ -f "$CLEANUP_DONE_FILE" ]; then
+        return 0
+    fi
+    touch "$CLEANUP_DONE_FILE"
+    
     echo -e "\n${YELLOW}Shutting down services...${NC}"
     
     # Kill tail processes if they exist
     cleanup_tails
     
+    # Stop backend
     if [ -f "$BACKEND_PID_FILE" ]; then
         BACKEND_PID=$(cat "$BACKEND_PID_FILE")
+        echo -e "${BLUE}Stopping backend (PID: $BACKEND_PID)...${NC}"
         if ps -p "$BACKEND_PID" > /dev/null 2>&1; then
-            echo -e "${BLUE}Stopping backend (PID: $BACKEND_PID)...${NC}"
             kill "$BACKEND_PID" 2>/dev/null
+            echo -e "${GREEN}✓ Backend stopped${NC}"
+        else
+            echo -e "${YELLOW}Backend process not found (may have already stopped)${NC}"
         fi
         rm -f "$BACKEND_PID_FILE"
     fi
     
+    # Stop frontend
     if [ -f "$FRONTEND_PID_FILE" ]; then
         FRONTEND_PID=$(cat "$FRONTEND_PID_FILE")
+        echo -e "${BLUE}Stopping frontend (PID: $FRONTEND_PID)...${NC}"
         if ps -p "$FRONTEND_PID" > /dev/null 2>&1; then
-            echo -e "${BLUE}Stopping frontend (PID: $FRONTEND_PID)...${NC}"
             kill "$FRONTEND_PID" 2>/dev/null
+            echo -e "${GREEN}✓ Frontend stopped${NC}"
+        else
+            echo -e "${YELLOW}Frontend process not found (may have already stopped)${NC}"
         fi
         rm -f "$FRONTEND_PID_FILE"
     fi
+    
+    # Stop PostgreSQL if it's running
+    if check_postgres_running; then
+        echo -e "${BLUE}Stopping PostgreSQL...${NC}"
+        stop_postgres
+    else
+        echo -e "${GREEN}✓ PostgreSQL is not running${NC}"
+    fi
+    rm -f "$POSTGRES_STARTED_FILE" "$POSTGRES_WAS_RUNNING_FILE"
     
     # Kill any remaining processes
     pkill -f "uvicorn app.main:app" 2>/dev/null
@@ -106,12 +135,58 @@ check_postgres_running() {
     return 1
 }
 
+# Function to stop PostgreSQL
+stop_postgres() {
+    if ! check_postgres_running; then
+        echo -e "${GREEN}✓ PostgreSQL is not running${NC}"
+        return 0
+    fi
+    
+    # Try to stop PostgreSQL using Homebrew services
+    if command -v brew &> /dev/null; then
+        # Try postgresql@15 first
+        if brew services list | grep -q "postgresql@15"; then
+            echo -e "${BLUE}Stopping PostgreSQL 15 via Homebrew...${NC}"
+            brew services stop postgresql@15 2>/dev/null || {
+                # Try without @15 suffix
+                if brew services list | grep -q "postgresql"; then
+                    brew services stop postgresql 2>/dev/null || true
+                fi
+            }
+        elif brew services list | grep -q "postgresql"; then
+            echo -e "${BLUE}Stopping PostgreSQL via Homebrew...${NC}"
+            brew services stop postgresql 2>/dev/null || true
+        else
+            # Try direct pg_ctl stop
+            if [ -d "/opt/homebrew/var/postgresql@15" ]; then
+                /opt/homebrew/bin/pg_ctl -D /opt/homebrew/var/postgresql@15 stop 2>/dev/null || true
+            elif [ -d "/usr/local/var/postgresql@15" ]; then
+                /usr/local/bin/pg_ctl -D /usr/local/var/postgresql@15 stop 2>/dev/null || true
+            fi
+        fi
+        
+        # Wait a moment and verify it stopped
+        sleep 2
+        if ! check_postgres_running; then
+            echo -e "${GREEN}✓ PostgreSQL stopped successfully${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠ PostgreSQL may still be running (could be used by other processes)${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}Homebrew not found. Cannot automatically stop PostgreSQL.${NC}"
+    fi
+}
+
 # Function to start PostgreSQL
 start_postgres() {
     echo -e "${BLUE}Checking PostgreSQL status...${NC}"
     
     if check_postgres_running; then
         echo -e "${GREEN}✓ PostgreSQL is already running${NC}"
+        # Track that PostgreSQL was running so we can stop it on shutdown
+        touch "$POSTGRES_WAS_RUNNING_FILE"
         return 0
     fi
     
@@ -163,6 +238,10 @@ start_postgres() {
             fi
         fi
         
+        # Mark that we started PostgreSQL
+        touch "$POSTGRES_STARTED_FILE"
+        POSTGRES_STARTED_BY_SCRIPT=true
+        
         # Wait for PostgreSQL to start
         echo -e "${BLUE}Waiting for PostgreSQL to start...${NC}"
         for i in {1..30}; do
@@ -174,6 +253,7 @@ start_postgres() {
         done
         
         echo -e "${RED}PostgreSQL failed to start within 30 seconds${NC}"
+        rm -f "$POSTGRES_STARTED_FILE"
         return 1
     else
         echo -e "${RED}Homebrew not found. Cannot automatically start PostgreSQL.${NC}"
@@ -181,6 +261,9 @@ start_postgres() {
         return 1
     fi
 }
+
+# Clean up any stale cleanup flag from previous runs
+rm -f "$CLEANUP_DONE_FILE"
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Starting Expense Tracker Development${NC}"
