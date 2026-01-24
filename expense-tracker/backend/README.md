@@ -9,26 +9,42 @@ Backend API for the Expense Tracker application built with FastAPI.
 poetry install
 ```
 
-2. Configure environment variables:
+2. Set up PostgreSQL database:
+   - See [POSTGRES_SETUP.md](../POSTGRES_SETUP.md) for detailed instructions
+   - Quick setup:
+     ```bash
+     # Create database
+     createdb expense_tracker
+     # Or using psql:
+     psql postgres -c "CREATE DATABASE expense_tracker;"
+     ```
+
+3. Configure environment variables:
 ```bash
 # Copy the example environment file
 cp .env.example .env
 
-# Edit .env with your configuration (optional for local development)
+# Edit .env with your PostgreSQL connection string
+# Default: postgresql://postgres:postgres@localhost:5432/expense_tracker
 # See .env.example for all available options
 ```
 
-3. Run database migrations:
+4. Run database migrations:
 ```bash
 poetry run alembic upgrade head
 ```
 
-4. Seed the database with default categories and sample data:
+5. (Optional) Migrate data from SQLite if you have existing data:
+```bash
+poetry run python scripts/migrate_sqlite_to_postgres.py
+```
+
+6. Seed the database with default categories and sample data:
 ```bash
 poetry run python scripts/seed_data.py
 ```
 
-5. Start the development server:
+7. Start the development server:
 ```bash
 poetry run uvicorn app.main:app --reload
 ```
@@ -62,9 +78,10 @@ backend/
 > **Note**: See `.env.example` for a complete list of all environment variables with descriptions and examples.
 
 ### Database
-- `DATABASE_URL`: Database connection string (default: SQLite)
-  - Development: `sqlite:///./expense_tracker.db`
-  - Production: PostgreSQL connection string
+- `DATABASE_URL`: PostgreSQL connection string (required)
+  - Development: `postgresql://postgres:postgres@localhost:5432/expense_tracker`
+  - Production: PostgreSQL connection string from your hosting provider
+  - **Note**: PostgreSQL is now used for both development and production to ensure consistency
 
 ### Authentication & Security
 - `DEFAULT_USERNAME`: Default admin username (default: "admin")
@@ -157,8 +174,9 @@ This script will:
 If you want to reset everything including the password:
 
 ```bash
-# Delete the SQLite database
-rm expense_tracker.db
+# Drop and recreate PostgreSQL database
+psql postgres -c "DROP DATABASE IF EXISTS expense_tracker;"
+psql postgres -c "CREATE DATABASE expense_tracker;"
 
 # Run migrations
 poetry run alembic upgrade head

@@ -96,7 +96,7 @@ Frontend will be available at `http://localhost:5173`
 - Pydantic (data validation)
 - Alembic (database migrations)
 - Poetry (dependency management)
-- PostgreSQL (production) / SQLite (development)
+- PostgreSQL (development and production)
 
 ### Frontend
 - React 18 + TypeScript

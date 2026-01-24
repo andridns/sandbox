@@ -3,13 +3,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# Database URL - SQLite for development, PostgreSQL for production
+# Database URL - PostgreSQL for both development and production
+# Default to local PostgreSQL if not set
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./expense_tracker.db"
+    "postgresql://postgres:postgres@localhost:5432/expense_tracker"
 )
 
-# For SQLite, we need to disable check_same_thread
+# Create engine - PostgreSQL by default
+# For backward compatibility, still support SQLite if explicitly configured
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         DATABASE_URL,
@@ -17,6 +19,7 @@ if DATABASE_URL.startswith("sqlite"):
         echo=False
     )
 else:
+    # PostgreSQL connection
     engine = create_engine(DATABASE_URL, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

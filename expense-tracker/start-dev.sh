@@ -123,6 +123,18 @@ fi
 # Start backend
 echo -e "${BLUE}Starting backend server on http://localhost:8000...${NC}"
 cd "$BACKEND_DIR"
+
+# Load DATABASE_URL from .env file if it exists
+if [ -f ".env" ]; then
+    echo -e "${BLUE}Loading DATABASE_URL from .env file...${NC}"
+    # Extract DATABASE_URL from .env file (handles comments and empty lines)
+    DATABASE_URL_LINE=$(grep -v '^#' .env | grep -v '^$' | grep '^DATABASE_URL=' | head -1)
+    if [ ! -z "$DATABASE_URL_LINE" ]; then
+        export "$DATABASE_URL_LINE"
+        echo -e "${GREEN}✓ DATABASE_URL loaded${NC}"
+    fi
+fi
+
 poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > /tmp/expense-tracker-backend.log 2>&1 &
 BACKEND_PID=$!
 echo "$BACKEND_PID" > "$BACKEND_PID_FILE"

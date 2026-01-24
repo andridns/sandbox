@@ -313,21 +313,33 @@ async def get_category_breakdown(
             else:
                 end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
     
-    # Get all expenses in the date range
-    expenses = db.query(Expense).filter(
+    # Use efficient JOIN query to get expenses with categories in one query
+    # This avoids N+1 query problems that would occur with Postgres
+    # Start from Expense table and LEFT JOIN to Category to handle expenses without categories
+    results = db.query(
+        Expense.category_id.label('category_id'),
+        Category.name.label('category_name'),
+        Expense.currency,
+        func.sum(Expense.amount).label('total'),
+        func.count(Expense.id).label('count')
+    ).outerjoin(
+        Category, Expense.category_id == Category.id
+    ).filter(
         Expense.date >= start_date,
         Expense.date <= end_date
+    ).group_by(
+        Expense.category_id, Category.name, Expense.currency
     ).all()
     
-    if not expenses:
+    if not results:
         return {
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "breakdown": []
         }
     
-    # Get unique currencies and fetch exchange rates for IDR conversion
-    currencies = set(exp.currency for exp in expenses)
+    # Get unique currencies from results and fetch exchange rates for IDR conversion
+    currencies = set(result.currency for result in results if result.currency)
     conversion_rates = {}
     
     for curr in currencies:
@@ -352,24 +364,22 @@ async def get_category_breakdown(
             except Exception:
                 conversion_rates[currency_upper] = Decimal("1.0")
     
-    # Group expenses by category and calculate totals in IDR
+    # Group by category and calculate totals in IDR
     category_totals = {}
     category_counts = {}
+    category_names = {}
     
-    for expense in expenses:
-        category_id = str(expense.category_id) if expense.category_id else None
+    for result in results:
+        category_id = str(result.category_id) if result.category_id else None
+        category_name = result.category_name if result.category_name else "Uncategorized"
         
-        # Get category name
-        if expense.category_id:
-            category = db.query(Category).filter(Category.id == expense.category_id).first()
-            category_name = category.name if category else "Uncategorized"
-        else:
-            category_name = "Uncategorized"
+        # Store category name (handle both None and string category_id)
+        category_names[category_id] = category_name
         
         # Convert to IDR
-        currency_upper = expense.currency.upper()
+        currency_upper = result.currency.upper() if result.currency else "IDR"
         rate = conversion_rates.get(currency_upper, Decimal("1.0"))
-        amount_in_idr = Decimal(str(expense.amount)) * rate
+        amount_in_idr = Decimal(str(result.total or 0)) * rate
         
         # Accumulate totals
         if category_id not in category_totals:
@@ -377,17 +387,12 @@ async def get_category_breakdown(
             category_counts[category_id] = 0
         
         category_totals[category_id] += amount_in_idr
-        category_counts[category_id] += 1
+        category_counts[category_id] += (result.count or 0)
     
     # Build breakdown list
     breakdown = []
     for category_id, total in category_totals.items():
-        # Get category name (already stored in our loop, but get fresh to be safe)
-        if category_id and category_id != "None":
-            category = db.query(Category).filter(Category.id == UUID(category_id)).first()
-            category_name = category.name if category else "Uncategorized"
-        else:
-            category_name = "Uncategorized"
+        category_name = category_names.get(category_id, "Uncategorized")
         
         breakdown.append({
             "category_id": category_id or "",
