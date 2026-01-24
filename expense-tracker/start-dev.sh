@@ -93,9 +93,105 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
+# Function to check if PostgreSQL is running
+check_postgres_running() {
+    # Check if port 5432 is listening
+    if lsof -Pi :5432 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        return 0
+    fi
+    # Also check if postgres process exists
+    if pgrep -x postgres >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+# Function to start PostgreSQL
+start_postgres() {
+    echo -e "${BLUE}Checking PostgreSQL status...${NC}"
+    
+    if check_postgres_running; then
+        echo -e "${GREEN}✓ PostgreSQL is already running${NC}"
+        return 0
+    fi
+    
+    echo -e "${YELLOW}PostgreSQL is not running. Attempting to start...${NC}"
+    
+    # Try to start PostgreSQL using Homebrew services (most common on macOS)
+    if command -v brew &> /dev/null; then
+        # Try postgresql@15 first (as user mentioned Postgres 15)
+        if brew services list | grep -q "postgresql@15"; then
+            echo -e "${BLUE}Starting PostgreSQL 15 via Homebrew...${NC}"
+            brew services start postgresql@15 || {
+                echo -e "${YELLOW}Failed to start via 'brew services start postgresql@15', trying alternative...${NC}"
+                # Try without @15 suffix
+                if brew services list | grep -q "postgresql"; then
+                    brew services start postgresql || {
+                        echo -e "${RED}Failed to start PostgreSQL via Homebrew services${NC}"
+                        return 1
+                    }
+                else
+                    echo -e "${RED}PostgreSQL service not found in Homebrew${NC}"
+                    return 1
+                fi
+            }
+        elif brew services list | grep -q "postgresql"; then
+            echo -e "${BLUE}Starting PostgreSQL via Homebrew...${NC}"
+            brew services start postgresql || {
+                echo -e "${RED}Failed to start PostgreSQL via Homebrew services${NC}"
+                return 1
+            }
+        else
+            echo -e "${YELLOW}PostgreSQL not found in Homebrew services. Trying direct pg_ctl...${NC}"
+            # Try to find and start PostgreSQL directly
+            if [ -d "/opt/homebrew/var/postgresql@15" ]; then
+                /opt/homebrew/bin/pg_ctl -D /opt/homebrew/var/postgresql@15 start || {
+                    echo -e "${RED}Failed to start PostgreSQL directly${NC}"
+                    return 1
+                }
+            elif [ -d "/usr/local/var/postgresql@15" ]; then
+                /usr/local/bin/pg_ctl -D /usr/local/var/postgresql@15 start || {
+                    echo -e "${RED}Failed to start PostgreSQL directly${NC}"
+                    return 1
+                }
+            else
+                echo -e "${RED}Could not find PostgreSQL installation${NC}"
+                echo -e "${YELLOW}Please start PostgreSQL manually or install it with:${NC}"
+                echo -e "${YELLOW}  brew install postgresql@15${NC}"
+                echo -e "${YELLOW}  brew services start postgresql@15${NC}"
+                return 1
+            fi
+        fi
+        
+        # Wait for PostgreSQL to start
+        echo -e "${BLUE}Waiting for PostgreSQL to start...${NC}"
+        for i in {1..30}; do
+            sleep 1
+            if check_postgres_running; then
+                echo -e "${GREEN}✓ PostgreSQL started successfully${NC}"
+                return 0
+            fi
+        done
+        
+        echo -e "${RED}PostgreSQL failed to start within 30 seconds${NC}"
+        return 1
+    else
+        echo -e "${RED}Homebrew not found. Cannot automatically start PostgreSQL.${NC}"
+        echo -e "${YELLOW}Please start PostgreSQL manually before running this script.${NC}"
+        return 1
+    fi
+}
+
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Starting Expense Tracker Development${NC}"
 echo -e "${GREEN}========================================${NC}"
+echo ""
+
+# Start PostgreSQL if needed
+if ! start_postgres; then
+    echo -e "${RED}Failed to start PostgreSQL. Please start it manually and try again.${NC}"
+    exit 1
+fi
 echo ""
 
 # Check backend dependencies
