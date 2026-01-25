@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { historyApi, ExpenseHistory, categoriesApi } from '../services/api';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { historyApi, ExpenseHistory, categoriesApi, expensesApi } from '../services/api';
+import { toast } from 'react-hot-toast';
+import ExpenseForm from '../components/Expenses/ExpenseForm';
 import type { Category } from '../types';
 
 interface ExpenseData {
@@ -23,6 +25,9 @@ const HISTORY_PER_PAGE = 500;
 const History = () => {
   const [actionFilter, setActionFilter] = useState<string>('');
   const [usernameFilter, setUsernameFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -283,9 +288,56 @@ const History = () => {
     };
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: expensesApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['history'] });
+      queryClient.invalidateQueries({ queryKey: ['topExpenses'] });
+      toast.success('Expense deleted');
+    },
+    onError: () => {
+      toast.error('Failed to delete expense');
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this expense?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    setEditingExpense(id);
+    setShowForm(true);
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingExpense(null);
+  };
+
+  // Check if expense can be edited/deleted (only for create and update actions)
+  const canEditOrDelete = (entry: ExpenseHistory): boolean => {
+    return (entry.action === 'create' || entry.action === 'update') && entry.expense_id !== null;
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
       <h2 className="text-xl md:text-2xl font-bold text-primary-600">Activity</h2>
+
+      {showForm && (
+        <ExpenseForm
+          expenseId={editingExpense}
+          onClose={handleFormClose}
+          onSuccess={() => {
+            handleFormClose();
+            queryClient.invalidateQueries({ queryKey: ['expenses'] });
+            queryClient.invalidateQueries({ queryKey: ['history'] });
+            queryClient.invalidateQueries({ queryKey: ['topExpenses'] });
+          }}
+        />
+      )}
 
       {/* Filters */}
       <div className="glass p-4 md:p-5 rounded-2xl shadow-modern border border-modern-border/50">
@@ -454,6 +506,28 @@ const History = () => {
                         ))}
                       </div>
                     )}
+                    
+                    {/* Actions row - only show for create and update */}
+                    {canEditOrDelete(entry) && entry.expense_id && (
+                      <div className="flex justify-end items-center pt-2 border-t border-modern-border/20 mt-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEdit(entry.expense_id!)}
+                            className="text-primary-600 hover:text-primary-700 transition-colors text-base"
+                            title="Edit"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDelete(entry.expense_id!)}
+                            className="text-red-500 hover:text-red-600 transition-colors text-base"
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -468,6 +542,7 @@ const History = () => {
                     <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">Action</th>
                     <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">User</th>
                     <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">Details</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold text-modern-text-light uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-modern-border/30">
@@ -530,6 +605,26 @@ const History = () => {
                               </div>
                             )}
                           </div>
+                        </td>
+                        <td className="px-5 py-3 text-sm">
+                          {canEditOrDelete(entry) && entry.expense_id ? (
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleEdit(entry.expense_id!)}
+                                className="text-primary-600 hover:text-primary-700 font-semibold transition-colors hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete(entry.expense_id!)}
+                                className="text-red-500 hover:text-red-600 font-semibold transition-colors hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-modern-text-light text-xs">-</span>
+                          )}
                         </td>
                       </tr>
                     );
