@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, func, case
 from typing import Optional, List, Dict
 from datetime import date
@@ -17,6 +17,7 @@ from app.models.user import User
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from app.core.auth import get_current_user
 from app.services.currency import get_exchange_rates
+from app.services.cache import cache
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -28,7 +29,6 @@ async def get_expenses(
     category_ids: Optional[List[UUID]] = Query(None, description="Multiple category IDs for OR filtering"),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
-    tags: Optional[str] = Query(None),  # comma-separated tags
     min_amount: Optional[float] = Query(None),
     max_amount: Optional[float] = Query(None),
     search: Optional[str] = Query(None),
@@ -38,7 +38,8 @@ async def get_expenses(
     db: Session = Depends(get_db)
 ):
     """Get expenses with advanced filtering"""
-    query = db.query(Expense)
+    # Use eager loading to prevent N+1 queries when accessing category
+    query = db.query(Expense).options(joinedload(Expense.category))
 
     # Apply filters - support both single category_id (backward compatibility) and multiple category_ids
     if category_ids:
@@ -51,11 +52,7 @@ async def get_expenses(
     
     if end_date:
         query = query.filter(Expense.date <= end_date)
-    
-    if tags:
-        tag_list = [tag.strip() for tag in tags.split(",")]
-        query = query.filter(Expense.tags.contains(tag_list))
-    
+
     # Handle amount filtering with currency conversion to IDR
     if min_amount is not None or max_amount is not None:
         # Get unique currencies from expenses
@@ -129,13 +126,7 @@ async def get_expenses(
     
     if search:
         search_term = f"%{search}%"
-        query = query.filter(
-            or_(
-                Expense.description.ilike(search_term),
-                Expense.notes.ilike(search_term),
-                Expense.location.ilike(search_term)
-            )
-        )
+        query = query.filter(Expense.description.ilike(search_term))
 
     # Order by date descending
     query = query.order_by(Expense.date.desc(), Expense.created_at.desc())
@@ -177,17 +168,15 @@ async def create_expense(
             'description': db_expense.description,
             'date': db_expense.date.isoformat(),
             'category_id': str(db_expense.category_id) if db_expense.category_id else None,
-            'category_name': category_name,
-            'tags': db_expense.tags if db_expense.tags else [],
-            'location': db_expense.location,
-            'notes': db_expense.notes,
-            'is_recurring': db_expense.is_recurring,
-            'receipt_url': db_expense.receipt_url,
+            'category_name': category_name
         }, default=str)
     )
     db.add(history_entry)
     db.commit()
-    
+
+    # Invalidate dashboard cache after creating expense
+    cache.invalidate("dashboard")
+
     return db_expense
 
 
@@ -230,12 +219,7 @@ async def update_expense(
         'description': expense.description,
         'date': expense.date.isoformat(),
         'category_id': str(expense.category_id) if expense.category_id else None,
-        'category_name': old_category_name,
-        'tags': expense.tags if expense.tags else [],
-        'location': expense.location,
-        'notes': expense.notes,
-        'is_recurring': expense.is_recurring,
-        'receipt_url': expense.receipt_url,
+        'category_name': old_category_name
     }
     
     update_data = expense_update.model_dump(exclude_unset=True)
@@ -261,12 +245,7 @@ async def update_expense(
             'description': expense.description,
             'date': expense.date.isoformat(),
             'category_id': str(expense.category_id) if expense.category_id else None,
-            'category_name': new_category_name,
-            'tags': expense.tags if expense.tags else [],
-            'location': expense.location,
-            'notes': expense.notes,
-            'is_recurring': expense.is_recurring,
-            'receipt_url': expense.receipt_url,
+            'category_name': new_category_name
         }
         history_entry = ExpenseHistory(
             expense_id=expense.id,
@@ -279,7 +258,10 @@ async def update_expense(
         )
         db.add(history_entry)
         db.commit()
-    
+
+    # Invalidate dashboard cache after updating expense
+    cache.invalidate("dashboard")
+
     return expense
 
 
@@ -423,14 +405,17 @@ async def delete_expense(
         # #endregion
         
         db.commit()
-        
+
+        # Invalidate dashboard cache after deleting expense
+        cache.invalidate("dashboard")
+
         # #region agent log
         try:
             with open(log_path, 'a') as f:
                 f.write(json_lib.dumps({'sessionId': 'debug-session', 'runId': 'run1', 'hypothesisId': 'D', 'location': 'expenses.py:309', 'message': 'commit successful', 'data': {}, 'timestamp': int(time.time() * 1000)}) + '\n')
         except: pass
         # #endregion
-        
+
         logger.info(f"Successfully deleted expense {expense_id} by user {current_user.id}")
     except HTTPException:
         raise

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, extract
 from typing import Optional, List
 from datetime import date, datetime, timedelta
@@ -630,8 +630,8 @@ async def get_top_expenses(
             else:
                 end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
     
-    # Build base query
-    query = db.query(Expense).filter(
+    # Build base query with eager loading to prevent N+1 queries
+    query = db.query(Expense).options(joinedload(Expense.category)).filter(
         Expense.date >= start_date,
         Expense.date <= end_date
     )
@@ -725,11 +725,6 @@ async def get_top_expenses(
             "description": item["expense"].description,
             "category_id": str(item["expense"].category_id) if item["expense"].category_id else None,
             "date": item["expense"].date.isoformat(),
-            "tags": item["expense"].tags if item["expense"].tags else [],
-            "receipt_url": item["expense"].receipt_url,
-            "location": item["expense"].location,
-            "notes": item["expense"].notes,
-            "is_recurring": item["expense"].is_recurring,
             "created_at": item["expense"].created_at.isoformat() if item["expense"].created_at else None,
             "updated_at": item["expense"].updated_at.isoformat() if item["expense"].updated_at else None,
             "amount_in_idr": item["amount_in_idr"]

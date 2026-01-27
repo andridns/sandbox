@@ -7,7 +7,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from app.database import engine, Base
-from app.api import expenses, categories, budgets, reports, export, tags, upload, backup, currency, import_api, auth, admin, history, rent_expenses
+from app.api import expenses, categories, reports, export, backup, currency, import_api, auth, admin, history, rent_expenses, dashboard
+from app.middleware.query_profiler import setup_query_profiling
 
 # Configure logging first
 logging.basicConfig(
@@ -50,6 +51,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Enable query profiling in development mode
+setup_query_profiling()
+
 # CORS configuration - allow origins from environment variable or default to localhost
 # In development, allow all origins for easier mobile testing
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
@@ -75,11 +79,9 @@ app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 # Protected routes (require authentication)
 app.include_router(expenses.router, prefix="/api/v1", tags=["expenses"])
 app.include_router(categories.router, prefix="/api/v1", tags=["categories"])
-app.include_router(budgets.router, prefix="/api/v1", tags=["budgets"])
 app.include_router(reports.router, prefix="/api/v1", tags=["reports"])
+app.include_router(dashboard.router, prefix="/api/v1", tags=["dashboard"])
 app.include_router(export.router, prefix="/api/v1", tags=["export"])
-app.include_router(tags.router, prefix="/api/v1", tags=["tags"])
-app.include_router(upload.router, prefix="/api/v1", tags=["upload"])
 app.include_router(backup.router, prefix="/api/v1", tags=["backup"])
 app.include_router(currency.router, prefix="/api/v1", tags=["currency"])
 app.include_router(import_api.router, prefix="/api/v1", tags=["import"])
@@ -90,11 +92,6 @@ app.include_router(rent_expenses.router, prefix="/api/v1", tags=["rent-expenses"
 # Include seed router if available
 if SEED_AVAILABLE:
     app.include_router(seed.router, prefix="/api/v1", tags=["seed"])
-
-# Mount static files for receipts
-uploads_dir = Path(__file__).parent.parent / "uploads"
-if uploads_dir.exists():
-    app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
 @app.get("/")

@@ -9,7 +9,6 @@ from pathlib import Path
 from app.database import get_db
 from app.models.expense import Expense
 from app.models.category import Category
-from app.models.budget import Budget
 from app.models.backup import Backup
 from app.models.user import User
 from app.schemas.backup import BackupResponse
@@ -35,8 +34,7 @@ async def create_backup(
     # Collect all data
     expenses = db.query(Expense).all()
     categories = db.query(Category).all()
-    budgets = db.query(Budget).all()
-    
+
     # Convert to dictionaries
     backup_data = {
         "expenses": [
@@ -47,13 +45,8 @@ async def create_backup(
                 "description": exp.description,
                 "category_id": str(exp.category_id) if exp.category_id else None,
                 "date": exp.date.isoformat(),
-                "tags": exp.tags,
-                "receipt_url": exp.receipt_url,
-                "location": exp.location,
-                "notes": exp.notes,
-                "is_recurring": exp.is_recurring,
                 "created_at": exp.created_at.isoformat() if exp.created_at else None,
-                "updated_at": exp.updated_at.isoformat() if exp.updated_at else None,
+                "updated_at": exp.updated_at.isoformat() if exp.updated_at else None
             }
             for exp in expenses
         ],
@@ -68,20 +61,6 @@ async def create_backup(
                 "updated_at": cat.updated_at.isoformat() if cat.updated_at else None,
             }
             for cat in categories
-        ],
-        "budgets": [
-            {
-                "id": str(bud.id),
-                "category_id": str(bud.category_id) if bud.category_id else None,
-                "amount": float(bud.amount),
-                "currency": bud.currency,
-                "period": bud.period,
-                "start_date": bud.start_date.isoformat(),
-                "end_date": bud.end_date.isoformat(),
-                "created_at": bud.created_at.isoformat() if bud.created_at else None,
-                "updated_at": bud.updated_at.isoformat() if bud.updated_at else None,
-            }
-            for bud in budgets
         ],
         "backup_date": datetime.now().isoformat(),
         "backup_type": backup_type

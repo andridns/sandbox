@@ -5,7 +5,6 @@ import os
 
 from app.database import get_db
 from app.models.expense import Expense
-from app.models.budget import Budget
 from app.models.category import Category
 from app.core.auth import get_current_user
 from app.models.user import User
@@ -18,14 +17,11 @@ async def delete_all_data(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Delete all expenses, budgets, and custom categories (keeps default categories)"""
+    """Delete all expenses and custom categories (keeps default categories)"""
     try:
         # Delete all expenses
         db.query(Expense).delete()
-        
-        # Delete all budgets
-        db.query(Budget).delete()
-        
+
         # Delete custom categories (keep default ones)
         db.query(Category).filter(Category.is_default == False).delete()
         
@@ -46,7 +42,6 @@ async def delete_all_data(
             "message": "All data deleted successfully",
             "deleted": {
                 "expenses": "all",
-                "budgets": "all",
                 "custom_categories": "all",
                 "receipts": "all"
             }
