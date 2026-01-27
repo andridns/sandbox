@@ -25,7 +25,7 @@ This is a complete walkthrough for deploying your Expense Tracker application to
    - Select the repositories you want Railway to access (or select "All repositories")
    - Click **"Install"**
 5. You'll see a list of your GitHub repositories
-6. **Select the repository** that contains your `expense-tracker` folder (likely named `sandbox` or similar)
+6. **Select the repository** that contains your `backend` and `frontend` folders (likely named `sandbox` or similar)
 7. Railway will create a new project and start detecting your code
 
 ## Step 3: Add PostgreSQL Database
@@ -55,7 +55,7 @@ This is a complete walkthrough for deploying your Expense Tracker application to
    
    c. **Set Root Directory:**
       - Find the **"Root Directory"** field
-      - Enter: `expense-tracker/backend`
+      - Enter: `backend`
       - Press Enter or click outside to save
    
    d. **Configure Build Settings:**
@@ -107,7 +107,7 @@ This is a complete walkthrough for deploying your Expense Tracker application to
    
    c. **Set Root Directory:**
       - Find the **"Root Directory"** field
-      - Enter: `expense-tracker/frontend`
+      - Enter: `frontend`
       - Press Enter or click outside to save
    
    d. **Configure Build Settings:**
@@ -170,7 +170,7 @@ After deployment, verify:
 ## Troubleshooting Common Issues
 
 ### Backend won't build
-- **Check**: Root Directory is set to `expense-tracker/backend`
+- **Check**: Root Directory is set to `backend`
 - **Check**: Builder is set to "Dockerfile" (not Railpack)
 - **Check**: Dockerfile Path is set to `Dockerfile`
 - **Check**: All files are committed and pushed to GitHub
@@ -213,8 +213,8 @@ After deployment, verify:
 - Database: Managed by Railway (connection via DATABASE_URL)
 
 ### Important Settings
-- **Backend Root Directory**: `expense-tracker/backend`
-- **Frontend Root Directory**: `expense-tracker/frontend`
+- **Backend Root Directory**: `backend`
+- **Frontend Root Directory**: `frontend`
 - **Dockerfile Path**: `Dockerfile` (for both)
 
 ### Environment Variables
